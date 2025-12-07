@@ -1,45 +1,36 @@
-// ⚠️ VITE 環境變數設定重要說明：
-// Vite 在打包生產環境時，只會針對「明確寫出的變數名稱」進行靜態字串替換。
-// 例如：import.meta.env.VITE_SUPABASE_URL 會被替換成 "https://..."
-// ❌ 不能使用動態存取 (如 import.meta.env[key])，這在 Production 會讀不到值。
+// ⚠️ 重要修正：
+// Vite 打包時只會針對「明確寫出的變數名稱」進行靜態替換。
+// 不能使用動態 Key (例如 import.meta.env[key])，這在 Vercel 上會讀不到。
 
-// 1. 明確宣告變數 (讓 Vite 能夠靜態替換)
 // @ts-ignore
 const VITE_URL = import.meta.env.VITE_SUPABASE_URL;
 // @ts-ignore
 const VITE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-// 2. 輔助函式：安全讀取 process.env (相容 Create React App 或其他環境)
-const getProcessEnv = (key: string) => {
-  try {
-    // @ts-ignore
-    if (typeof process !== 'undefined' && process.env) {
-      // @ts-ignore
-      return process.env[key];
-    }
-  } catch (e) {
-    // 忽略錯誤
-  }
-  return '';
-};
-
-// 3. 組合最終設定 (優先使用 Vite 變數 -> 其次 Process 變數)
-const FINAL_URL = VITE_URL || getProcessEnv('VITE_SUPABASE_URL') || getProcessEnv('REACT_APP_SUPABASE_URL') || '';
-const FINAL_KEY = VITE_KEY || getProcessEnv('VITE_SUPABASE_ANON_KEY') || getProcessEnv('REACT_APP_SUPABASE_ANON_KEY') || '';
-
 export const SUPABASE_CONFIG = {
-  url: FINAL_URL,
-  anonKey: FINAL_KEY
+  // 優先使用 Vite 注入的變數
+  url: VITE_URL || '',
+  anonKey: VITE_KEY || ''
 };
 
-// 4. 除錯檢查 (在瀏覽器 Console 顯示狀態)
+// 安全性檢查：如果沒有讀到變數，嘗試從 process.env 讀取 (相容舊版或其他打包工具)
+if (!SUPABASE_CONFIG.url && typeof process !== 'undefined' && process.env) {
+  // @ts-ignore
+  SUPABASE_CONFIG.url = process.env.VITE_SUPABASE_URL || process.env.REACT_APP_SUPABASE_URL || '';
+}
+if (!SUPABASE_CONFIG.anonKey && typeof process !== 'undefined' && process.env) {
+  // @ts-ignore
+  SUPABASE_CONFIG.anonKey = process.env.VITE_SUPABASE_ANON_KEY || process.env.REACT_APP_SUPABASE_ANON_KEY || '';
+}
+
+// 除錯資訊 (在瀏覽器 Console 可見)
 if (!SUPABASE_CONFIG.url || !SUPABASE_CONFIG.anonKey) {
-  console.error('❌ Supabase 設定嚴重錯誤：找不到 API URL 或 Anon Key。請檢查 .env 或 Vercel Environment Variables 設定。');
+  console.error(
+    '❌ Supabase 連線失敗：環境變數未載入。\n' +
+    '請確認 Vercel Settings -> Environment Variables 已設定 VITE_SUPABASE_URL 與 VITE_SUPABASE_ANON_KEY，' +
+    '並且在設定後已執行過 Redeploy。'
+  );
 } else {
-  // 僅在開發環境或除錯時顯示，確認有讀到值
-  console.log('✅ Supabase 設定已載入', {
-    url: SUPABASE_CONFIG.url,
-    keyLoaded: !!SUPABASE_CONFIG.anonKey,
-    keyLength: SUPABASE_CONFIG.anonKey?.length
-  });
+  // 隱碼處理，僅確認有載入
+  console.log('✅ Supabase Config Loaded.');
 }
