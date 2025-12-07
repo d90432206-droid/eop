@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>EnterpriseOps 企業營運系統</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              // 暖色系配置
+              // 文字主要顏色 (深暖灰)
+              primary: '#44403c', // Stone 700
+              // 次要文字
+              secondary: '#78716c', // Stone 500
+              // 背景色 (暖白)
+              background: '#fafaf9', // Stone 50
+              
+              // 品牌主色 (珊瑚橘/焦糖色)
+              accent: '#ea580c', // Orange 600
+              'accent-hover': '#c2410c', // Orange 700
+              'accent-light': '#ffedd5', // Orange 100
+              'accent-soft': '#fff7ed', // Orange 50
+              
+              // 狀態色 (保持語意但微調柔和度)
+              success: '#10b981', // Emerald 500
+              warning: '#f59e0b', // Amber 500
+              danger: '#f43f5e', // Rose 500
+            },
+            borderRadius: {
+              'xl': '0.75rem',
+              '2xl': '1rem',
+              '3xl': '1.5rem',
+            }
+          }
+        }
+      }
+    </script>
+  <script type="importmap">
+{
+  "imports": {
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.1/",
+    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.556.0",
+    "@supabase/supabase-js": "https://aistudiocdn.com/@supabase/supabase-js@^2.86.2",
+    "react-router-dom": "https://aistudiocdn.com/react-router-dom@^7.10.1",
+    "react/": "https://aistudiocdn.com/react@^19.2.1/",
+    "react": "https://aistudiocdn.com/react@^19.2.1"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+  <body class="bg-background text-primary antialiased">
+    <div id="root"></div>
+  <script type="module" src="/index.tsx"></script>
+</body>
+</html>

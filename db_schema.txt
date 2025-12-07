@@ -1,0 +1,70 @@
+
+-- 🛠️ 10人模擬簽核架構設定腳本 🛠️ --
+
+-- 注意：請確保已在 Authentication 建立對應 Email 的使用者
+-- 此腳本會更新 employees 表格中的職稱與部門
+
+-- 1. 設定總經理 (GM) - 最高權限 (無需審核)
+UPDATE public.employees
+SET full_name = '王大明', department = '管理部', job_title = '總經理', role = 'admin'
+WHERE email = 'gm@chuyi.com.tw';
+
+-- 2. 設定總務經理 (Admin) - 系統管理員
+UPDATE public.employees
+SET full_name = '林總務', department = '總務部', job_title = '總務經理', role = 'admin'
+WHERE email = 'admin@chuyi.com.tw';
+
+-- ==========================================
+-- 業務部 (Sales)
+-- ==========================================
+
+-- 3. 業務經理 (審核 Sales_01)
+UPDATE public.employees
+SET full_name = '陳業務', department = '業務部', job_title = '部門經理', role = 'employee'
+WHERE email = 'sales_mgr@chuyi.com.tw';
+
+-- 4. 業務專員 (申請人)
+UPDATE public.employees
+SET full_name = '張小業', department = '業務部', job_title = '業務專員', role = 'employee'
+WHERE email = 'sales_01@chuyi.com.tw';
+
+-- ==========================================
+-- 品保部 (QA) - 三階層測試
+-- ==========================================
+
+-- 5. 品保經理 (審核 Chief & Specialist)
+UPDATE public.employees
+SET full_name = '吳品保', department = '品保部', job_title = '部門經理', role = 'employee'
+WHERE email = 'qa_mgr@chuyi.com.tw';
+
+-- 6. 品保課長 (審核 Specialist / 自己申請給經理審)
+UPDATE public.employees
+SET full_name = '李課長', department = '品保部', job_title = '課長', role = 'employee'
+WHERE email = 'qa_chief@chuyi.com.tw';
+
+-- 7. 品保專員 (申請人)
+UPDATE public.employees
+SET full_name = '趙小品', department = '品保部', job_title = '品保專員', role = 'employee'
+WHERE email = 'qa_01@chuyi.com.tw';
+
+-- ==========================================
+-- ATS部 (ATS) - 三階層測試
+-- ==========================================
+
+-- 8. ATS經理
+UPDATE public.employees
+SET full_name = '劉ATS', department = 'ATS部', job_title = '部門經理', role = 'employee'
+WHERE email = 'ats_mgr@chuyi.com.tw';
+
+-- 9. ATS課長
+UPDATE public.employees
+SET full_name = '黃課長', department = 'ATS部', job_title = '課長', role = 'employee'
+WHERE email = 'ats_chief@chuyi.com.tw';
+
+-- 10. ATS專員
+UPDATE public.employees
+SET full_name = '孫小A', department = 'ATS部', job_title = 'ATS專員', role = 'employee'
+WHERE email = 'ats_01@chuyi.com.tw';
+
+-- 顯示設定結果以供確認
+SELECT email, full_name, department, job_title, role FROM public.employees ORDER BY department;
