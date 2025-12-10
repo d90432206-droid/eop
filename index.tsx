@@ -9,7 +9,6 @@ if (!rootElement) {
 
 const root = ReactDOM.createRoot(rootElement);
 root.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
+  // Removing StrictMode to avoid conflict with Tailwind CDN/Browser Extensions causing white screen
+  <App />
 );

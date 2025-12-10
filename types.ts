@@ -18,15 +18,15 @@ export interface Employee {
   location_detail: string | null;
   expected_return: string | null;
   avatar_url: string | null;
-  
+
   // New: Hire Date for Annual Leave Calculation
   hire_date: string; // YYYY-MM-DD
-  
+
   // Quotas
   annual_leave_quota: number;   // days
   sick_leave_quota: number;     // days
   personal_leave_quota: number; // days
-  
+
   created_at?: string;
 }
 
@@ -45,15 +45,15 @@ export interface LeaveRequest {
   end_time: string;
   reason: string | null;
   status: RequestStatus;
-  
+
   // New: Overtime & Business Trip
   is_overtime?: boolean;
   overtime_hours?: number;
   meal_allowance?: boolean;
-  
+
   transport_mode?: 'personal_car' | 'hs_rail' | 'company_car' | null;
   approval_level?: 'dept_manager' | 'general_manager';
-  
+
   logs?: RequestLog[]; // JSONB column for approval history
 
   created_at?: string;
@@ -101,12 +101,16 @@ export interface VehicleLog {
 export interface ExpenseClaim {
   id: number;
   employee_id: string;
+  leave_request_id?: number; // Linked to a specific business trip
   claim_date: string;
   category: string;
   description: string | null;
   amount: number;
   currency: string;
   status: RequestStatus;
+
+  // Optional: details for printing
+  employees?: Employee;
 }
 
 export interface Visitor {
@@ -119,18 +123,18 @@ export interface Visitor {
   host_employee_id: string | null;
   purpose: string | null;
   status: 'expected' | 'arrived' | 'left' | 'cancelled'; // Added cancelled
-  
+
   // New: Accommodation & Pickup
   needs_accommodation?: boolean;
   hotel_name?: string;
   accommodation_budget?: number;
   needs_pickup?: boolean;
   pickup_location?: string;
-  
+
   // New: GA Mgmt
   booking_ref?: string;
   ga_notified?: boolean;
-  
+
   created_at?: string;
   employees?: Employee; // Host info
 }
