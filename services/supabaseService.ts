@@ -33,6 +33,7 @@ const handleError = (error: any) => {
       if (errorMessage.includes('JWT') || errorMessage.includes('Invalid API key')) errorMessage = '憑證無效或過期，請重新登入。';
       if (errorMessage.includes('Invalid login credentials')) errorMessage = '帳號或密碼錯誤。';
       if (errorMessage.includes('PGRST116')) errorMessage = '找不到符合的資料 (PGRST116)。';
+      if (errorMessage.includes('Could not find the')) errorMessage = '資料庫欄位不符，請聯繫管理員。';
     }
 
     throw new Error(errorMessage);
@@ -356,7 +357,7 @@ export const cancelLeaveRequest = async (id: number, employeeName: string): Prom
 export const getMyBusinessTrips = async (employeeId: string): Promise<LeaveRequest[]> => {
   const { data, error } = await supabase
     .from('leave_requests')
-    .select('*')
+    .select('*, employees(full_name, department, job_title)') // Join added
     .eq('employee_id', employeeId)
     .eq('leave_type', 'business')
     .eq('status', 'approved') // Only approved trips can have expenses
@@ -462,9 +463,24 @@ export const getVehicleLogs = async (vehicleId?: number): Promise<VehicleLog[]> 
 // --- Expenses ---
 
 export const createExpenseClaim = async (claim: Omit<ExpenseClaim, 'id' | 'created_at'>): Promise<void> => {
+  // DB does not have leave_request_id column. We must not send it.
+  const tripId = claim.leave_request_id;
+  const description = tripId ? `[TRIP-${tripId}] ${claim.description || ''}` : claim.description;
+
+  // Explicitly construct payload with ONLY columns that exist in DB
+  const dbPayload = {
+    employee_id: claim.employee_id,
+    claim_date: claim.claim_date,
+    category: claim.category,
+    amount: claim.amount,
+    currency: claim.currency,
+    description: description,
+    status: claim.status
+  };
+
   const { error } = await supabase
     .from('expense_claims')
-    .insert(claim);
+    .insert(dbPayload);
 
   if (error) handleError(error);
 };
@@ -472,16 +488,29 @@ export const createExpenseClaim = async (claim: Omit<ExpenseClaim, 'id' | 'creat
 export const getExpenseClaims = async (leaveRequestId?: number): Promise<ExpenseClaim[]> => {
   let query = supabase
     .from('expense_claims')
-    .select('*, employees(full_name, department, job_title)') // Fetches full info for hierarchy
+    .select('*, employees(full_name, department, job_title)')
     .order('claim_date', { ascending: false });
 
   if (leaveRequestId) {
-    query = query.eq('leave_request_id', leaveRequestId);
+    // Filter by tag in description
+    query = query.ilike('description', `[TRIP-${leaveRequestId}]%`);
   }
 
   const { data, error } = await query;
   if (error) return [];
-  return data as ExpenseClaim[];
+
+  // Clean description for UI (remove tag)
+  return (data as ExpenseClaim[]).map(item => {
+    // Re-attach the ID conceptually if needed
+    if (leaveRequestId) item.leave_request_id = leaveRequestId;
+
+    if (item.description && item.description.startsWith(`[TRIP-`)) {
+      // Keep raw description for debugging if needed, or clean it. 
+      // Here we clean it for display.
+      item.description = item.description.replace(/^\[TRIP-\d+\]\s*/, '');
+    }
+    return item;
+  });
 };
 
 export const updateExpenseStatus = async (id: number, status: RequestStatus): Promise<void> => {
