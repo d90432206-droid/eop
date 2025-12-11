@@ -74,6 +74,7 @@ const ExpenseClaims: React.FC = () => {
 
         try {
             // 1. Create Expense
+            // Note: services/supabaseService.ts handles the missing column by tagging description
             await createExpenseClaim({
                 employee_id: currentUserId,
                 leave_request_id: selectedTrip.id,
@@ -176,7 +177,11 @@ const ExpenseClaims: React.FC = () => {
                                         </div>
                                         <div>
                                             <div className="font-bold text-stone-800">出差申請單 #{trip.id}</div>
-                                            <div className="text-xs text-stone-500 font-mono">{new Date(trip.start_time).toLocaleDateString()}</div>
+                                            <div className="text-xs text-stone-500 font-mono flex items-center gap-1">
+                                                {new Date(trip.start_time).toLocaleDateString()}
+                                                <span className="text-stone-300">|</span>
+                                                {(trip.employees as any)?.full_name || '未知'}
+                                            </div>
                                         </div>
                                     </div>
                                     <ArrowRightCircle size={20} className="text-stone-300 group-hover:text-accent" />
@@ -220,6 +225,7 @@ const ExpenseClaims: React.FC = () => {
                             </h3>
                             <div className="space-y-3 text-sm">
                                 <div><span className="text-stone-500 block text-xs uppercase font-bold">單號</span> <span className="font-mono font-bold text-stone-800">#{selectedTrip.id}</span></div>
+                                <div><span className="text-stone-500 block text-xs uppercase font-bold">申請人</span> <span className="font-bold text-stone-800">{(selectedTrip.employees as any)?.full_name}</span></div>
                                 <div><span className="text-stone-500 block text-xs uppercase font-bold">日期</span> <span className="font-bold text-stone-800">{new Date(selectedTrip.start_time).toLocaleDateString()} ~ {new Date(selectedTrip.end_time).toLocaleDateString()}</span></div>
                                 <div><span className="text-stone-500 block text-xs uppercase font-bold">事由</span> <span className="font-bold text-stone-800">{selectedTrip.reason}</span></div>
                             </div>
@@ -336,8 +342,9 @@ const ExpenseClaims: React.FC = () => {
                     <div className="grid grid-cols-2 gap-4 mb-6 text-sm">
                         <div>
                             <p className="mb-2"><span className="font-bold w-24 inline-block">申請日期:</span> {new Date().toLocaleDateString()}</p>
-                            <p className="mb-2"><span className="font-bold w-24 inline-block">申請部門:</span> {currentEmp?.department}</p>
-                            <p className="mb-2"><span className="font-bold w-24 inline-block">申請人:</span> {currentEmp?.full_name} ({currentEmp?.job_title})</p>
+                            {/* Updated to show Trip Applicant Info correctly */}
+                            <p className="mb-2"><span className="font-bold w-24 inline-block">申請部門:</span> {(selectedTrip?.employees as any)?.department || currentEmp?.department}</p>
+                            <p className="mb-2"><span className="font-bold w-24 inline-block">申請人:</span> {(selectedTrip?.employees as any)?.full_name || currentEmp?.full_name} ({(selectedTrip?.employees as any)?.job_title || currentEmp?.job_title})</p>
                         </div>
                         <div className="text-right">
                             <p className="mb-2"><span className="font-bold w-24 inline-block">出差單號:</span> #{selectedTrip?.id}</p>
