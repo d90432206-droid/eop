@@ -37,30 +37,105 @@ const StatusDashboard: React.FC = () => {
         returnTime: ''
     });
 
-    const fetchData = async () => {
+    // --- Auto Sync Logic ---
+    const syncStatusWithAttendance = async (currentEmployees: Employee[], allLeaves: LeaveRequest[]) => {
+        const now = new Date();
+        const updates: Promise<void>[] = [];
+        let hasUpdates = false;
+
+        currentEmployees.forEach(emp => {
+            // Find an active, approved leave request for this employee RIGHT NOW
+            const activeReq = allLeaves.find(req => {
+                const start = new Date(req.start_time);
+                const end = new Date(req.end_time);
+                return (
+                    req.employee_id === emp.id &&
+                    req.status === 'approved' &&
+                    start <= now &&
+                    end >= now
+                );
+            });
+
+            if (activeReq) {
+                let targetStatus: EmployeeStatus | null = null;
+
+                // Determine target status based on leave type
+                if (activeReq.leave_type === 'business') {
+                    targetStatus = 'out';
+                } else if (['annual', 'sick', 'other'].includes(activeReq.leave_type)) {
+                    targetStatus = 'leave';
+                }
+                // Note: 'overtime' usually happens in office, so we might keep 'in_office' or ignore it.
+                // We only auto-update if strictly 'out' or 'leave'.
+
+                // If a target status exists AND it differs from current status, update it.
+                if (targetStatus && emp.current_status !== targetStatus) {
+                    // Update DB to sync reality
+                    const p = updateEmployeeStatus(
+                        emp.id,
+                        targetStatus,
+                        activeReq.reason, // Auto-fill note from reason
+                        activeReq.end_time // Auto-fill return time
+                    );
+                    updates.push(p);
+                    hasUpdates = true;
+                    console.log(`[Auto-Sync] Updating ${emp.full_name} to ${targetStatus} based on ${activeReq.leave_type}`);
+                }
+            }
+        });
+
+        if (hasUpdates) {
+            await Promise.all(updates);
+            return true; // Return true if updates occurred
+        }
+        return false;
+    };
+
+    const fetchData = async (isInitialLoad = false) => {
         try {
-            setLoading(true);
+            if (isInitialLoad) setLoading(true);
             setError(null);
 
             const me = await getCurrentEmployee();
             setCurrentEmp(me);
 
-            const data = await getEmployees();
-            setEmployees(data);
-            setFilteredEmployees(data);
+            // Parallel fetch
+            const [data, leaves] = await Promise.all([
+                getEmployees(),
+                getLeaveRequests()
+            ]);
 
-            const leaves = await getLeaveRequests();
+            let finalEmployees = data;
+
+            // Only on initial load, perform synchronization check
+            if (isInitialLoad) {
+                const updated = await syncStatusWithAttendance(data, leaves);
+                if (updated) {
+                    // If we updated DB, re-fetch to get clean state
+                    const refreshedData = await getEmployees();
+                    finalEmployees = refreshedData;
+                }
+            }
+
+            setEmployees(finalEmployees);
+            setFilteredEmployees(finalEmployees);
             setLeaveRequests(leaves);
+
         } catch (err: any) {
             setError(err.message);
         } finally {
-            setLoading(false);
+            if (isInitialLoad) setLoading(false);
         }
     };
 
     useEffect(() => {
-        fetchData();
-        const interval = setInterval(fetchData, 30000);
+        // Initial load with Sync
+        fetchData(true);
+
+        const interval = setInterval(() => {
+            // Periodic refresh without forcing Sync (to allow manual overrides to persist in session)
+            fetchData(false);
+        }, 30000);
 
         // Weather API (Open-Meteo for Taipei)
         const fetchWeather = async () => {
@@ -167,7 +242,7 @@ const StatusDashboard: React.FC = () => {
         if (newStatus === 'in_office') {
             try {
                 await updateEmployeeStatus(targetId, newStatus, null, null);
-                await fetchData();
+                await fetchData(false);
             } catch (err: any) {
                 alert(err.message);
             }
@@ -211,7 +286,7 @@ const StatusDashboard: React.FC = () => {
             }
 
             await updateEmployeeStatus(targetId, newStatus, finalNote, formattedTime);
-            await fetchData();
+            await fetchData(false);
             setStatusModal(prev => ({ ...prev, isOpen: false }));
         } catch (err: any) {
             alert(err.message);
@@ -303,7 +378,11 @@ const StatusDashboard: React.FC = () => {
                             <div className="flex-1 min-w-0">
                                 <h1 className="text-2xl md:text-3xl font-bold tracking-tight truncate flex items-center gap-2">
                                     {currentEmp.full_name}
-                                    {currentEmp.role === 'admin' && <ShieldCheck size={18} className="text-amber-300" title="管理員" />}
+                                    {currentEmp.role === 'admin' && (
+                                        <div title="管理員">
+                                            <ShieldCheck size={18} className="text-amber-300" />
+                                        </div>
+                                    )}
                                 </h1>
                                 <div className="flex items-center gap-2 text-orange-50 mt-1.5 font-medium text-sm md:text-base truncate opacity-90">
                                     <span className="bg-black/10 px-2 py-0.5 rounded">{currentEmp.department}</span>
@@ -661,13 +740,13 @@ const StatusDashboard: React.FC = () => {
             {statusModal.isOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
                     <div className={`bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border ${statusModal.newStatus === 'meeting' ? 'border-amber-200' :
-                            statusModal.newStatus === 'out' ? 'border-stone-200' : 'border-sky-200'
+                        statusModal.newStatus === 'out' ? 'border-stone-200' : 'border-sky-200'
                         }`}>
                         <div className={`p-4 border-b flex items-center justify-between ${statusModal.newStatus === 'meeting' ? 'bg-amber-50 border-amber-100' :
-                                statusModal.newStatus === 'out' ? 'bg-stone-50 border-stone-100' : 'bg-sky-50 border-sky-100'
+                            statusModal.newStatus === 'out' ? 'bg-stone-50 border-stone-100' : 'bg-sky-50 border-sky-100'
                             }`}>
                             <h3 className={`font-bold text-lg flex items-center gap-2 ${statusModal.newStatus === 'meeting' ? 'text-amber-800' :
-                                    statusModal.newStatus === 'out' ? 'text-stone-800' : 'text-sky-800'
+                                statusModal.newStatus === 'out' ? 'text-stone-800' : 'text-sky-800'
                                 }`}>
                                 {statusModal.newStatus === 'meeting' && <CheckCircle2 size={24} />}
                                 {statusModal.newStatus === 'out' && <MapPin size={24} />}
