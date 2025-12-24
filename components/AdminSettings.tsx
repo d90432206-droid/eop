@@ -345,85 +345,46 @@ const AdminSettings: React.FC = () => {
                                     <Download size={14} /> 下載配置 (JSON)
                                 </button>
                             </div>
+                            <div className="overflow-x-auto">
+                                <table className="min-w-full divide-y divide-stone-200 text-sm">
+                                    <thead className="bg-stone-100">
+                                        <tr>
+                                            <th className="px-6 py-3 text-left font-bold text-stone-600">Email</th>
+                                            <th className="px-6 py-3 text-left font-bold text-stone-600">姓名</th>
+                                            <th className="px-6 py-3 text-left font-bold text-stone-600">部門</th>
+                                            <th className="px-6 py-3 text-left font-bold text-stone-600">職稱</th>
+                                            <th className="px-6 py-3 text-left font-bold text-stone-600">權限</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-stone-100">
+                                        {employees.map(emp => (
+                                            <tr key={emp.id} className="hover:bg-stone-50">
+                                                <td className="px-6 py-3 text-stone-600 font-mono">{emp.email}</td>
+                                                <td className="px-6 py-3 font-bold text-stone-800">{emp.full_name}</td>
+                                                <td className="px-6 py-3 text-stone-600">{emp.department}</td>
+                                                <td className="px-6 py-3 text-stone-600">
+                                                    <span className={`px-2 py-1 rounded-full text-xs font-bold ${emp.job_title?.includes('經理') || emp.job_title?.includes('總經理') ? 'bg-amber-100 text-amber-800' :
+                                                        emp.job_title?.includes('課長') ? 'bg-indigo-100 text-indigo-800' : 'bg-stone-100 text-stone-600'
+                                                        }`}>
+                                                        {emp.job_title || '-'}
+                                                    </span>
+                                                </td>
+                                                <td className="px-6 py-3">
+                                                    {emp.role === 'admin' ?
+                                                        <span className="text-rose-600 font-bold bg-rose-50 px-2 py-1 rounded">Admin</span> :
+                                                        <span className="text-stone-500">Employee</span>
+                                                    }
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
-                    </div>
+                    </>
                 )}
-
-                {/* Quick Actions */}
-                <div className="bg-white rounded-2xl shadow-sm border border-stone-200 p-6">
-                    <div className="flex items-start gap-4">
-                        <div className="p-3 bg-indigo-50 text-indigo-600 rounded-xl">
-                            <Database size={24} />
-                        </div>
-                        <div className="flex-1">
-                            <h3 className="text-lg font-bold text-stone-800 mb-1">快速套用 10 人模擬簽核架構</h3>
-                            <p className="text-stone-500 text-sm mb-4">
-                                此功能會根據 Email 自動更新員工的「部門」、「職稱」與「權限」，以符合測試腳本的需求。<br />
-                                包含：總經理、總務經理、業務部(3人)、品保部(3人)、ATS部(3人)。
-                            </p>
-                            <button
-                                onClick={handleApplyDemoData}
-                                disabled={seeding}
-                                className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl font-bold shadow-md transition-colors flex items-center gap-2"
-                            >
-                                {seeding ? <RefreshCw className="animate-spin" size={18} /> : <CheckCircle size={18} />}
-                                {seeding ? '資料更新中...' : '套用模擬架構設定'}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Employee List */}
-                <div className="bg-white rounded-2xl shadow-sm border border-stone-200 overflow-hidden">
-                    <div className="px-6 py-4 border-b border-stone-200 bg-stone-50 flex justify-between items-center">
-                        <h3 className="font-bold text-stone-800 flex items-center gap-2">
-                            <Users size={20} /> 目前員工列表 ({employees.length})
-                        </h3>
-                        <button onClick={fetchData} className="text-stone-400 hover:text-stone-600">
-                            <RefreshCw size={16} />
-                        </button>
-                    </div>
-                    <div className="overflow-x-auto">
-                        <table className="min-w-full divide-y divide-stone-200 text-sm">
-                            <thead className="bg-stone-100">
-                                <tr>
-                                    <th className="px-6 py-3 text-left font-bold text-stone-600">Email</th>
-                                    <th className="px-6 py-3 text-left font-bold text-stone-600">姓名</th>
-                                    <th className="px-6 py-3 text-left font-bold text-stone-600">部門</th>
-                                    <th className="px-6 py-3 text-left font-bold text-stone-600">職稱</th>
-                                    <th className="px-6 py-3 text-left font-bold text-stone-600">權限</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-stone-100">
-                                {employees.map(emp => (
-                                    <tr key={emp.id} className="hover:bg-stone-50">
-                                        <td className="px-6 py-3 text-stone-600 font-mono">{emp.email}</td>
-                                        <td className="px-6 py-3 font-bold text-stone-800">{emp.full_name}</td>
-                                        <td className="px-6 py-3 text-stone-600">{emp.department}</td>
-                                        <td className="px-6 py-3 text-stone-600">
-                                            <span className={`px-2 py-1 rounded-full text-xs font-bold ${emp.job_title?.includes('經理') || emp.job_title?.includes('總經理') ? 'bg-amber-100 text-amber-800' :
-                                                emp.job_title?.includes('課長') ? 'bg-indigo-100 text-indigo-800' : 'bg-stone-100 text-stone-600'
-                                                }`}>
-                                                {emp.job_title || '-'}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-3">
-                                            {emp.role === 'admin' ?
-                                                <span className="text-rose-600 font-bold bg-rose-50 px-2 py-1 rounded">Admin</span> :
-                                                <span className="text-stone-500">Employee</span>
-                                            }
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
             </div>
-        )
-    }
-        </div >
-    );
-};
+        );
+    };
 
-export default AdminSettings;
+    export default AdminSettings;
