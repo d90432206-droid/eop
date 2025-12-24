@@ -283,66 +283,104 @@ const AdminSettings: React.FC = () => {
                 </div>
 
                 {activeTab === 'system' && (
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        {/* 1. Health Stats */}
-                        <div className="bg-white rounded-2xl shadow-sm border border-stone-200 p-6">
-                            <h3 className="text-lg font-bold text-stone-800 mb-4 flex items-center gap-2">
-                                <Activity size={20} className="text-accent" /> 系統數據狀態
-                            </h3>
-                            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                                <div className="bg-stone-50 p-3 rounded-xl border border-stone-100 text-center">
-                                    <div className="text-xs text-stone-500 font-bold uppercase">員工總數</div>
-                                    <div className="text-2xl font-mono font-bold text-stone-800">{stats?.employees || 0}</div>
+                    <div className="space-y-6">
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            {/* 1. Health Stats */}
+                            <div className="bg-white rounded-2xl shadow-sm border border-stone-200 p-6">
+                                <h3 className="text-lg font-bold text-stone-800 mb-4 flex items-center gap-2">
+                                    <Activity size={20} className="text-accent" /> 系統數據狀態
+                                </h3>
+                                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                                    <div className="bg-stone-50 p-3 rounded-xl border border-stone-100 text-center">
+                                        <div className="text-xs text-stone-500 font-bold uppercase">員工總數</div>
+                                        <div className="text-2xl font-mono font-bold text-stone-800">{stats?.employees || 0}</div>
+                                    </div>
+                                    <div className="bg-stone-50 p-3 rounded-xl border border-stone-100 text-center">
+                                        <div className="text-xs text-stone-500 font-bold uppercase">假單紀錄</div>
+                                        <div className="text-2xl font-mono font-bold text-amber-600">{stats?.leave_requests || 0}</div>
+                                    </div>
+                                    <div className="bg-stone-50 p-3 rounded-xl border border-stone-100 text-center">
+                                        <div className="text-xs text-stone-500 font-bold uppercase">車輛資源</div>
+                                        <div className="text-2xl font-mono font-bold text-sky-600">{stats?.vehicles || 0}</div>
+                                    </div>
+                                    <div className="bg-stone-50 p-3 rounded-xl border border-stone-100 text-center">
+                                        <div className="text-xs text-stone-500 font-bold uppercase">車輛預約</div>
+                                        <div className="text-2xl font-mono font-bold text-stone-600">{stats?.vehicle_bookings || 0}</div>
+                                    </div>
+                                    <div className="bg-stone-50 p-3 rounded-xl border border-stone-100 text-center">
+                                        <div className="text-xs text-stone-500 font-bold uppercase">報銷單據</div>
+                                        <div className="text-2xl font-mono font-bold text-emerald-600">{stats?.expense_claims || 0}</div>
+                                    </div>
+                                    <div className="bg-stone-50 p-3 rounded-xl border border-stone-100 text-center">
+                                        <div className="text-xs text-stone-500 font-bold uppercase">訪客紀錄</div>
+                                        <div className="text-2xl font-mono font-bold text-purple-600">{stats?.visitors || 0}</div>
+                                    </div>
                                 </div>
-                                <div className="bg-stone-50 p-3 rounded-xl border border-stone-100 text-center">
-                                    <div className="text-xs text-stone-500 font-bold uppercase">假單紀錄</div>
-                                    <div className="text-2xl font-mono font-bold text-amber-600">{stats?.leave_requests || 0}</div>
+                            </div>
+
+                            {/* 2. Configuration & Site Map */}
+                            <div className="bg-white rounded-2xl shadow-sm border border-stone-200 p-6 flex flex-col">
+                                <h3 className="text-lg font-bold text-stone-800 mb-4 flex items-center gap-2">
+                                    <Layout size={20} className="text-accent" /> 畫面配置與架構
+                                </h3>
+                                <div className="flex-1 overflow-auto max-h-48 mb-4 custom-scrollbar">
+                                    <ul className="space-y-2 text-sm">
+                                        <li className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-accent"></span> <span className="font-mono font-bold text-stone-700">/</span> 人員動態看板 (Dashboard)</li>
+                                        <li className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-accent"></span> <span className="font-mono font-bold text-stone-700">/attendance</span> 差勤與請假 (Leave/Overtime)</li>
+                                        <li className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-accent"></span> <span className="font-mono font-bold text-stone-700">/vehicles</span> 車輛管理 (Booking/Logs)</li>
+                                        <li className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-accent"></span> <span className="font-mono font-bold text-stone-700">/expenses</span> 費用報銷 (Claims/Cart)</li>
+                                        <li className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-accent"></span> <span className="font-mono font-bold text-stone-700">/visitors</span> 訪客登記 (Log/Reception)</li>
+                                        <li className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-rose-500"></span> <span className="font-mono font-bold text-stone-700">/admin</span> 系統管理 (Settings)</li>
+                                    </ul>
                                 </div>
-                                <div className="bg-stone-50 p-3 rounded-xl border border-stone-100 text-center">
-                                    <div className="text-xs text-stone-500 font-bold uppercase">車輛資源</div>
-                                    <div className="text-2xl font-mono font-bold text-sky-600">{stats?.vehicles || 0}</div>
-                                </div>
-                                <div className="bg-stone-50 p-3 rounded-xl border border-stone-100 text-center">
-                                    <div className="text-xs text-stone-500 font-bold uppercase">車輛預約</div>
-                                    <div className="text-2xl font-mono font-bold text-stone-600">{stats?.vehicle_bookings || 0}</div>
-                                </div>
-                                <div className="bg-stone-50 p-3 rounded-xl border border-stone-100 text-center">
-                                    <div className="text-xs text-stone-500 font-bold uppercase">報銷單據</div>
-                                    <div className="text-2xl font-mono font-bold text-emerald-600">{stats?.expense_claims || 0}</div>
-                                </div>
-                                <div className="bg-stone-50 p-3 rounded-xl border border-stone-100 text-center">
-                                    <div className="text-xs text-stone-500 font-bold uppercase">訪客紀錄</div>
-                                    <div className="text-2xl font-mono font-bold text-purple-600">{stats?.visitors || 0}</div>
+                                <div className="flex items-center justify-between border-t border-stone-100 pt-4 mt-auto">
+                                    <div className="flex items-center gap-2">
+                                        <Palette size={16} className="text-stone-400" />
+                                        <div className="flex gap-1">
+                                            <div className="w-6 h-6 rounded bg-[#44403c] shadow-sm" title="Primary Text"></div>
+                                            <div className="w-6 h-6 rounded bg-[#ea580c] shadow-sm" title="Accent: Orange"></div>
+                                            <div className="w-6 h-6 rounded bg-[#fafaf9] border border-stone-200 shadow-sm" title="Background"></div>
+                                        </div>
+                                    </div>
+                                    <button onClick={handleDownloadConfig} className="text-xs bg-stone-100 hover:bg-stone-200 text-stone-700 px-3 py-1.5 rounded-lg flex items-center gap-1 font-bold transition-colors">
+                                        <Download size={14} /> 下載配置 (JSON)
+                                    </button>
                                 </div>
                             </div>
                         </div>
 
-                        {/* 2. Configuration & Site Map */}
-                        <div className="bg-white rounded-2xl shadow-sm border border-stone-200 p-6 flex flex-col">
-                            <h3 className="text-lg font-bold text-stone-800 mb-4 flex items-center gap-2">
-                                <Layout size={20} className="text-accent" /> 畫面配置與架構
-                            </h3>
-                            <div className="flex-1 overflow-auto max-h-48 mb-4 custom-scrollbar">
-                                <ul className="space-y-2 text-sm">
-                                    <li className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-accent"></span> <span className="font-mono font-bold text-stone-700">/</span> 人員動態看板 (Dashboard)</li>
-                                    <li className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-accent"></span> <span className="font-mono font-bold text-stone-700">/attendance</span> 差勤與請假 (Leave/Overtime)</li>
-                                    <li className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-accent"></span> <span className="font-mono font-bold text-stone-700">/vehicles</span> 車輛管理 (Booking/Logs)</li>
-                                    <li className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-accent"></span> <span className="font-mono font-bold text-stone-700">/expenses</span> 費用報銷 (Claims/Cart)</li>
-                                    <li className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-accent"></span> <span className="font-mono font-bold text-stone-700">/visitors</span> 訪客登記 (Log/Reception)</li>
-                                    <li className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-rose-500"></span> <span className="font-mono font-bold text-stone-700">/admin</span> 系統管理 (Settings)</li>
-                                </ul>
-                            </div>
-                            <div className="flex items-center justify-between border-t border-stone-100 pt-4 mt-auto">
-                                <div className="flex items-center gap-2">
-                                    <Palette size={16} className="text-stone-400" />
-                                    <div className="flex gap-1">
-                                        <div className="w-6 h-6 rounded bg-[#44403c] shadow-sm" title="Primary Text"></div>
-                                        <div className="w-6 h-6 rounded bg-[#ea580c] shadow-sm" title="Accent: Orange"></div>
-                                        <div className="w-6 h-6 rounded bg-[#fafaf9] border border-stone-200 shadow-sm" title="Background"></div>
-                                    </div>
+                        {/* Quick Actions */}
+                        <div className="bg-white rounded-2xl shadow-sm border border-stone-200 p-6">
+                            <div className="flex items-start gap-4">
+                                <div className="p-3 bg-indigo-50 text-indigo-600 rounded-xl">
+                                    <Database size={24} />
                                 </div>
-                                <button onClick={handleDownloadConfig} className="text-xs bg-stone-100 hover:bg-stone-200 text-stone-700 px-3 py-1.5 rounded-lg flex items-center gap-1 font-bold transition-colors">
-                                    <Download size={14} /> 下載配置 (JSON)
+                                <div className="flex-1">
+                                    <h3 className="text-lg font-bold text-stone-800 mb-1">快速套用 10 人模擬簽核架構</h3>
+                                    <p className="text-stone-500 text-sm mb-4">
+                                        此功能會根據 Email 自動更新員工的「部門」、「職稱」與「權限」，以符合測試腳本的需求。<br />
+                                        包含：總經理、總務經理、業務部(3人)、品保部(3人)、ATS部(3人)。
+                                    </p>
+                                    <button
+                                        onClick={handleApplyDemoData}
+                                        disabled={seeding}
+                                        className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl font-bold shadow-md transition-colors flex items-center gap-2"
+                                    >
+                                        {seeding ? <RefreshCw className="animate-spin" size={18} /> : <CheckCircle size={18} />}
+                                        {seeding ? '資料更新中...' : '套用模擬架構設定'}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Employee List */}
+                        <div className="bg-white rounded-2xl shadow-sm border border-stone-200 overflow-hidden">
+                            <div className="px-6 py-4 border-b border-stone-200 bg-stone-50 flex justify-between items-center">
+                                <h3 className="font-bold text-stone-800 flex items-center gap-2">
+                                    <Users size={20} /> 目前員工列表 ({employees.length})
+                                </h3>
+                                <button onClick={fetchData} className="text-stone-400 hover:text-stone-600">
+                                    <RefreshCw size={16} />
                                 </button>
                             </div>
                             <div className="overflow-x-auto">
@@ -381,7 +419,7 @@ const AdminSettings: React.FC = () => {
                                 </table>
                             </div>
                         </div>
-                    </>
+                    </div>
                 )}
             </div>
         );
