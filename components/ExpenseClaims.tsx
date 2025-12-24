@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createExpenseClaim, getExpenseClaims, getCurrentUser, getMyBusinessTrips, getCurrentEmployee, updateExpenseStatus, createVehicleLog, getVehicles, getVehicleBookings, updateVehicleMileage, submitExpenseClaim } from '../services/supabaseService';
 import { ExpenseClaim, LeaveRequest, Employee, Vehicle, VehicleBooking } from '../types';
-import { Receipt, Globe, Plus, Utensils, BedDouble, Briefcase, CalendarClock, Info, Printer, ArrowRightCircle, CheckCircle, Trash2, Fuel, ChevronLeft, Download, FileText, ChevronRight, Send } from 'lucide-react';
+import { Receipt, Globe, Plus, Utensils, BedDouble, Briefcase, CalendarClock, Info, Printer, ArrowRightCircle, CheckCircle, Trash2, Fuel, ChevronLeft, Download, FileText, ChevronRight, Send, Filter, Search } from 'lucide-react';
 
 const ExpenseClaims: React.FC = () => {
     const [viewMode, setViewMode] = useState<'list' | 'detail'>('list');
@@ -12,6 +12,10 @@ const ExpenseClaims: React.FC = () => {
 
     const [currentUserId, setCurrentUserId] = useState<string | null>(null);
     const [currentEmp, setCurrentEmp] = useState<Employee | null>(null);
+
+    // List Filter State
+    const [filterStart, setFilterStart] = useState('');
+    const [filterEnd, setFilterEnd] = useState('');
 
     // Form Input State
     const [date, setDate] = useState('');
@@ -162,6 +166,19 @@ const ExpenseClaims: React.FC = () => {
         .filter(e => e.status !== 'cancelled' && e.status !== 'rejected')
         .reduce((sum, e) => sum + e.amount, 0);
 
+    const filteredTrips = myTrips.filter(trip => {
+        if (!filterStart && !filterEnd) return true;
+
+        const tripStart = new Date(trip.start_time).getTime();
+        const tripEnd = new Date(trip.end_time).getTime();
+
+        const filterS = filterStart ? new Date(filterStart).getTime() : 0;
+        const filterE = filterEnd ? new Date(filterEnd).getTime() + 86400000 : 9999999999999; // End of day
+
+        // Check for overlap or containment
+        return (tripStart < filterE && tripEnd > filterS);
+    });
+
     // -- RENDER: List View --
     if (viewMode === 'list') {
         return (
@@ -172,6 +189,31 @@ const ExpenseClaims: React.FC = () => {
                             <Briefcase size={28} className="text-accent" /> 出差費用報銷
                         </h2>
                         <p className="text-stone-500 text-sm mt-1">請選擇下方的「已核准出差單」來進行費用申報</p>
+                    </div>
+
+                    <div className="flex items-center gap-2 bg-white p-2 rounded-xl border border-stone-200 shadow-sm">
+                        <div className="flex items-center gap-2 px-2 border-r border-stone-100">
+                            <Filter size={16} className="text-stone-400" />
+                            <span className="text-xs font-bold text-stone-500">日期篩選</span>
+                        </div>
+                        <input
+                            type="date"
+                            value={filterStart}
+                            onChange={e => setFilterStart(e.target.value)}
+                            className="bg-transparent text-sm border-none focus:ring-0 text-stone-600 outline-none"
+                        />
+                        <span className="text-stone-300">~</span>
+                        <input
+                            type="date"
+                            value={filterEnd}
+                            onChange={e => setFilterEnd(e.target.value)}
+                            className="bg-transparent text-sm border-none focus:ring-0 text-stone-600 outline-none"
+                        />
+                        {(filterStart || filterEnd) && (
+                            <button onClick={() => { setFilterStart(''); setFilterEnd(''); }} className="p-1 hover:bg-stone-100 rounded-full text-stone-400">
+                                <Trash2 size={14} />
+                            </button>
+                        )}
                     </div>
                 </div>
 
@@ -187,14 +229,14 @@ const ExpenseClaims: React.FC = () => {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-stone-100">
-                            {myTrips.length === 0 ? (
+                            {filteredTrips.length === 0 ? (
                                 <tr>
                                     <td colSpan={5} className="p-12 text-center text-stone-400">
-                                        目前沒有已核准的出差紀錄可供報銷
+                                        {myTrips.length === 0 ? "目前沒有已核准的出差紀錄可供報銷" : "沒有符合篩選條件的紀錄"}
                                     </td>
                                 </tr>
                             ) : (
-                                myTrips.map(trip => (
+                                filteredTrips.map(trip => (
                                     <tr key={trip.id} onClick={() => handleSelectTrip(trip)} className="hover:bg-stone-50 cursor-pointer transition-colors group">
                                         <td className="p-4 font-mono font-bold text-stone-800">#{trip.id}</td>
                                         <td className="p-4">

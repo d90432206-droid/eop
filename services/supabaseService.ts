@@ -528,7 +528,26 @@ export const submitExpenseClaim = async (leaveRequestId: number): Promise<void> 
     .update({ status: 'pending_dept' })
     .ilike('description', tag)
     .eq('status', 'pending');
-    
+
+  if (error) handleError(error);
+};
+
+export const getAdminExpenseClaims = async (status: RequestStatus = 'pending_dept'): Promise<ExpenseClaim[]> => {
+  const { data, error } = await supabase
+    .from('expense_claims')
+    .select('*, employees(full_name, department, job_title, employee_id)')
+    .eq('status', status)
+    .order('claim_date', { ascending: false });
+
+  if (error) return [];
+  return data as ExpenseClaim[];
+};
+
+export const updateAdminExpenseStatus = async (expenseIds: number[], status: RequestStatus): Promise<void> => {
+  const { error } = await supabase
+    .from('expense_claims')
+    .update({ status })
+    .in('id', expenseIds);
   if (error) handleError(error);
 };
 
