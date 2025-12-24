@@ -1,8 +1,8 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { createExpenseClaim, getExpenseClaims, getCurrentUser, getMyBusinessTrips, getCurrentEmployee, updateExpenseStatus, createVehicleLog, getVehicles, getVehicleBookings, updateVehicleMileage } from '../services/supabaseService';
+import { createExpenseClaim, getExpenseClaims, getCurrentUser, getMyBusinessTrips, getCurrentEmployee, updateExpenseStatus, createVehicleLog, getVehicles, getVehicleBookings, updateVehicleMileage, submitExpenseClaim } from '../services/supabaseService';
 import { ExpenseClaim, LeaveRequest, Employee, Vehicle, VehicleBooking } from '../types';
-import { Receipt, Globe, Plus, Utensils, BedDouble, Briefcase, CalendarClock, Info, Printer, ArrowRightCircle, CheckCircle, Trash2, Fuel, ChevronLeft, Download, FileText, ChevronRight } from 'lucide-react';
+import { Receipt, Globe, Plus, Utensils, BedDouble, Briefcase, CalendarClock, Info, Printer, ArrowRightCircle, CheckCircle, Trash2, Fuel, ChevronLeft, Download, FileText, ChevronRight, Send } from 'lucide-react';
 
 const ExpenseClaims: React.FC = () => {
     const [viewMode, setViewMode] = useState<'list' | 'detail'>('list');
@@ -123,6 +123,19 @@ const ExpenseClaims: React.FC = () => {
         }
     }
 
+    const handleSubmitAll = async () => {
+        if (!selectedTrip) return;
+        if (!confirm("確定要送出這些費用進行審核嗎？送出後將無法修改。")) return;
+
+        try {
+            await submitExpenseClaim(selectedTrip.id);
+            await fetchTripExpenses(selectedTrip.id); // Refresh to see updated status
+            alert("✅ 費用申請已送出至總務部門！");
+        } catch (e: any) {
+            alert(e.message);
+        }
+    };
+
     const handlePrint = () => {
         if (printRef.current) {
             const printContent = printRef.current.innerHTML;
@@ -162,46 +175,46 @@ const ExpenseClaims: React.FC = () => {
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {myTrips.length === 0 ? (
-                        <div className="col-span-full text-center py-12 bg-stone-50 rounded-2xl border border-dashed border-stone-200 text-stone-400">
-                            目前沒有已核准的出差紀錄可供報銷
-                        </div>
-                    ) : (
-                        myTrips.map(trip => (
-                            <div key={trip.id} onClick={() => handleSelectTrip(trip)} className="bg-white border border-stone-200 rounded-2xl p-6 shadow-sm hover:shadow-md hover:border-accent cursor-pointer transition-all group">
-                                <div className="flex justify-between items-start mb-3">
-                                    <div className="flex items-center gap-2">
-                                        <div className="p-2 bg-sky-50 text-sky-600 rounded-lg group-hover:bg-accent group-hover:text-white transition-colors">
-                                            <Globe size={24} />
-                                        </div>
-                                        <div>
-                                            <div className="font-bold text-stone-800">出差申請單 #{trip.id}</div>
-                                            <div className="text-xs text-stone-500 font-mono flex items-center gap-1">
-                                                {new Date(trip.start_time).toLocaleDateString()}
-                                                <span className="text-stone-300">|</span>
-                                                {(trip.employees as any)?.full_name || '未知'}
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <ArrowRightCircle size={20} className="text-stone-300 group-hover:text-accent" />
-                                </div>
-
-                                <div className="space-y-2 mb-4">
-                                    <div className="text-sm font-bold text-stone-700 line-clamp-2">{trip.reason}</div>
-                                    <div className="text-xs text-stone-500 flex items-center gap-1">
-                                        <CalendarClock size={12} />
-                                        {new Date(trip.start_time).toLocaleDateString()} ~ {new Date(trip.end_time).toLocaleDateString()}
-                                    </div>
-                                </div>
-
-                                <div className="pt-3 border-t border-stone-100 flex justify-between items-center">
-                                    <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded">可報銷</span>
-                                    <span className="text-xs text-stone-400 font-bold group-hover:text-accent transition-colors">點擊填寫明細 →</span>
-                                </div>
-                            </div>
-                        ))
-                    )}
+                <div className="bg-white border border-stone-200 rounded-2xl overflow-hidden shadow-sm">
+                    <table className="w-full text-left border-collapse">
+                        <thead className="bg-stone-50 border-b border-stone-200">
+                            <tr>
+                                <th className="p-4 text-xs font-bold text-stone-500 uppercase">單號</th>
+                                <th className="p-4 text-xs font-bold text-stone-500 uppercase">申請人/部門</th>
+                                <th className="p-4 text-xs font-bold text-stone-500 uppercase">日期區間</th>
+                                <th className="p-4 text-xs font-bold text-stone-500 uppercase">事由</th>
+                                <th className="p-4 text-xs font-bold text-stone-500 uppercase text-right">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-stone-100">
+                            {myTrips.length === 0 ? (
+                                <tr>
+                                    <td colSpan={5} className="p-12 text-center text-stone-400">
+                                        目前沒有已核准的出差紀錄可供報銷
+                                    </td>
+                                </tr>
+                            ) : (
+                                myTrips.map(trip => (
+                                    <tr key={trip.id} onClick={() => handleSelectTrip(trip)} className="hover:bg-stone-50 cursor-pointer transition-colors group">
+                                        <td className="p-4 font-mono font-bold text-stone-800">#{trip.id}</td>
+                                        <td className="p-4">
+                                            <div className="font-bold text-stone-800">{(trip.employees as any)?.full_name || '未知'}</div>
+                                            <div className="text-xs text-stone-400">{(trip.employees as any)?.department || '-'}</div>
+                                        </td>
+                                        <td className="p-4 text-sm text-stone-600">
+                                            {new Date(trip.start_time).toLocaleDateString()} ~ {new Date(trip.end_time).toLocaleDateString()}
+                                        </td>
+                                        <td className="p-4 text-sm text-stone-600 max-w-xs truncate">{trip.reason}</td>
+                                        <td className="p-4 text-right">
+                                            <button className="text-sm font-bold text-accent hover:text-accent-dark flex items-center justify-end gap-1 px-3 py-1.5 rounded-lg border border-transparent hover:bg-white hover:border-stone-200 transition-all">
+                                                填寫明細 <ArrowRightCircle size={16} />
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
                 </div>
             </div>
         )
@@ -280,8 +293,13 @@ const ExpenseClaims: React.FC = () => {
                                     <FileText size={20} className="text-stone-400" /> 費用明細 ({tripExpenses.length})
                                 </h3>
                                 <button onClick={handlePrint} disabled={tripExpenses.length === 0} className="flex items-center gap-2 bg-white text-stone-700 px-3 py-1.5 rounded-lg border border-stone-300 text-sm font-bold hover:bg-stone-50 disabled:opacity-50">
-                                    <Printer size={16} /> 列印 / 匯出 PDF
+                                    <Printer size={16} /> 列印
                                 </button>
+                                {tripExpenses.some(e => e.status === 'pending') && (
+                                    <button onClick={handleSubmitAll} className="flex items-center gap-2 bg-emerald-600 text-white px-3 py-1.5 rounded-lg border border-emerald-700 text-sm font-bold hover:bg-emerald-700 shadow-sm ml-2">
+                                        <Send size={16} /> 送出至總務
+                                    </button>
+                                )}
                             </div>
 
                             {/* UI List View */}

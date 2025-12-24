@@ -521,6 +521,17 @@ export const updateExpenseStatus = async (id: number, status: RequestStatus): Pr
   if (error) handleError(error);
 };
 
+export const submitExpenseClaim = async (leaveRequestId: number): Promise<void> => {
+  const tag = `[TRIP-${leaveRequestId}]%`;
+  const { error } = await supabase
+    .from('expense_claims')
+    .update({ status: 'pending_dept' })
+    .ilike('description', tag)
+    .eq('status', 'pending');
+    
+  if (error) handleError(error);
+};
+
 // --- Visitors ---
 
 export const getVisitors = async (): Promise<Visitor[]> => {
