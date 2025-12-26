@@ -633,6 +633,19 @@ export const updateAdminExpenseStatus = async (expenseIds: number[], status: Req
   if (error) handleError(error);
 };
 
+export const getAdminHistoryExpenseClaims = async (): Promise<ExpenseClaim[]> => {
+  const { data, error } = await supabase
+    .from('expense_claims')
+    .select('*, employees(full_name, department, job_title, employee_id)')
+    .neq('status', 'pending')
+    .neq('status', 'pending_dept')
+    .order('claim_date', { ascending: false })
+    .limit(100);
+
+  if (error) return [];
+  return data as ExpenseClaim[];
+};
+
 // --- Visitors ---
 
 export const getVisitors = async (): Promise<Visitor[]> => {
