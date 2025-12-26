@@ -123,10 +123,24 @@ const ExpenseClaims: React.FC = () => {
     }
 
     const handleDeleteExpense = async (id: number) => {
+        if (!selectedTrip) return;
+        const status = getTripStatus(selectedTrip.id);
+        const isLocked = status.label === '核准中' || status.label === '核銷完成';
+
+        if (isLocked) {
+            alert("❌ 此單據已送出或核銷完成，無法刪除項目。如需修改請聯繫退回。");
+            return;
+        }
+
         if (!confirm("確定要刪除此筆費用嗎？")) return;
         try {
             await updateExpenseStatus(id, 'cancelled');
             if (selectedTrip) await fetchTripExpenses(selectedTrip.id);
+            // Refresh global status
+            if (currentUserId) {
+                const allExp = await getAllMyExpenseClaims(currentUserId);
+                setAllMyExpenses(allExp);
+            }
         } catch (e: any) {
             alert(e.message);
         }
@@ -325,40 +339,54 @@ const ExpenseClaims: React.FC = () => {
                             <h3 className="font-bold text-stone-800 mb-4 flex items-center gap-2">
                                 <Plus size={20} className="text-accent" /> 新增費用
                             </h3>
-                            <form onSubmit={handleSubmitExpense} className="space-y-4">
-                                <div><label className="block text-xs font-bold text-stone-500 mb-1">日期</label><input required type="date" value={date} onChange={e => setDate(e.target.value)} className="w-full p-2 border border-stone-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-accent/50 outline-none" /></div>
-                                <div>
-                                    <label className="block text-xs font-bold text-stone-500 mb-1">類別</label>
-                                    <select value={category} onChange={e => setCategory(e.target.value)} className="w-full p-2 border border-stone-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-accent/50 outline-none">
-                                        <option value="Travel">交通費</option>
-                                        <option value="Meal">誤餐費</option>
-                                        <option value="Accommodation">住宿費</option>
-                                        <option value="Fuel">公務車加油</option>
-                                        <option value="Office Supplies">雜支</option>
-                                    </select>
-                                </div>
-                                {category === 'Fuel' && (
-                                    <div className="bg-amber-100 p-3 rounded-lg border border-amber-200 space-y-2">
-                                        <div><label className="block text-xs font-bold text-amber-800">車輛</label><select required value={selectedVehicle} onChange={e => setSelectedVehicle(e.target.value)} className="w-full p-1.5 border border-amber-300 rounded text-sm"><option value="">- 請選擇 -</option>{vehicles.map(v => <option key={v.id} value={v.id}>{v.name} ({v.plate_number})</option>)}</select></div>
-                                        <div><label className="block text-xs font-bold text-amber-800">當前里程 (km)</label><input required type="number" value={mileage} onChange={e => setMileage(e.target.value)} className="w-full p-1.5 border border-amber-300 rounded text-sm" /></div>
-                                    </div>
-                                )}
-                                <div>
-                                    <label className="block text-xs font-bold text-stone-500 mb-1">說明</label>
-                                    <input required type="text" value={description} onChange={e => setDescription(e.target.value)} className="w-full p-2 border border-stone-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-accent/50 outline-none" placeholder="例：高鐵台北-高雄" />
-                                </div>
-                                <div className="grid grid-cols-3 gap-2">
-                                    <div className="col-span-1">
-                                        <label className="block text-xs font-bold text-stone-500 mb-1">幣別</label>
-                                        <select value={currency} onChange={e => setCurrency(e.target.value)} className="w-full p-2 border border-stone-300 rounded-lg text-sm bg-white"><option value="TWD">TWD</option><option value="USD">USD</option><option value="JPY">JPY</option></select>
-                                    </div>
-                                    <div className="col-span-2">
-                                        <label className="block text-xs font-bold text-stone-500 mb-1">金額</label>
-                                        <input required type="number" value={amount} onChange={e => setAmount(e.target.value)} className="w-full p-2 border border-stone-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-accent/50 outline-none" placeholder="0" />
-                                    </div>
-                                </div>
-                                <button type="submit" className="w-full bg-stone-800 text-white py-2.5 rounded-xl font-bold hover:bg-stone-700 shadow-md transition-colors mt-2">加入費用</button>
-                            </form>
+                            {(() => {
+                                const status = getTripStatus(selectedTrip.id);
+                                const isLocked = status.label === '核准中' || status.label === '核銷完成';
+
+                                return (
+                                    <form onSubmit={handleSubmitExpense} className="space-y-4">
+                                        {isLocked && (
+                                            <div className="bg-amber-50 text-amber-600 p-3 rounded-lg text-sm font-bold border border-amber-200 mb-2">
+                                                🔒 此單據{status.label}，無法新增或修改費用。
+                                            </div>
+                                        )}
+                                        <fieldset disabled={isLocked} className="space-y-4 disabled:opacity-50">
+                                            <div><label className="block text-xs font-bold text-stone-500 mb-1">日期</label><input required type="date" value={date} onChange={e => setDate(e.target.value)} className="w-full p-2 border border-stone-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-accent/50 outline-none" /></div>
+                                            <div>
+                                                <label className="block text-xs font-bold text-stone-500 mb-1">類別</label>
+                                                <select value={category} onChange={e => setCategory(e.target.value)} className="w-full p-2 border border-stone-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-accent/50 outline-none">
+                                                    <option value="Travel">交通費</option>
+                                                    <option value="Meal">誤餐費</option>
+                                                    <option value="Accommodation">住宿費</option>
+                                                    <option value="Fuel">公務車加油</option>
+                                                    <option value="Office Supplies">雜支</option>
+                                                </select>
+                                            </div>
+                                            {category === 'Fuel' && (
+                                                <div className="bg-amber-100 p-3 rounded-lg border border-amber-200 space-y-2">
+                                                    <div><label className="block text-xs font-bold text-amber-800">車輛</label><select required value={selectedVehicle} onChange={e => setSelectedVehicle(e.target.value)} className="w-full p-1.5 border border-amber-300 rounded text-sm"><option value="">- 請選擇 -</option>{vehicles.map(v => <option key={v.id} value={v.id}>{v.name} ({v.plate_number})</option>)}</select></div>
+                                                    <div><label className="block text-xs font-bold text-amber-800">當前里程 (km)</label><input required type="number" value={mileage} onChange={e => setMileage(e.target.value)} className="w-full p-1.5 border border-amber-300 rounded text-sm" /></div>
+                                                </div>
+                                            )}
+                                            <div>
+                                                <label className="block text-xs font-bold text-stone-500 mb-1">說明</label>
+                                                <input required type="text" value={description} onChange={e => setDescription(e.target.value)} className="w-full p-2 border border-stone-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-accent/50 outline-none" placeholder="例：高鐵台北-高雄" />
+                                            </div>
+                                            <div className="grid grid-cols-3 gap-2">
+                                                <div className="col-span-1">
+                                                    <label className="block text-xs font-bold text-stone-500 mb-1">幣別</label>
+                                                    <select value={currency} onChange={e => setCurrency(e.target.value)} className="w-full p-2 border border-stone-300 rounded-lg text-sm bg-white"><option value="TWD">TWD</option><option value="USD">USD</option><option value="JPY">JPY</option></select>
+                                                </div>
+                                                <div className="col-span-2">
+                                                    <label className="block text-xs font-bold text-stone-500 mb-1">金額</label>
+                                                    <input required type="number" value={amount} onChange={e => setAmount(e.target.value)} className="w-full p-2 border border-stone-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-accent/50 outline-none" placeholder="0" />
+                                                </div>
+                                            </div>
+                                            <button type="submit" disabled={isLocked} className="w-full bg-stone-800 text-white py-2.5 rounded-xl font-bold hover:bg-stone-700 shadow-md transition-colors mt-2 disabled:bg-stone-300 disabled:cursor-not-allowed">加入費用</button>
+                                        </fieldset>
+                                    </form>
+                                );
+                            })()}
                         </div>
                     </div>
 
@@ -398,9 +426,13 @@ const ExpenseClaims: React.FC = () => {
                                                 </div>
                                                 <div className="flex items-center gap-4">
                                                     <span className="font-mono font-bold text-stone-800">{exp.currency} {exp.amount.toLocaleString()}</span>
-                                                    {exp.status !== 'cancelled' && (
-                                                        <button onClick={() => handleDeleteExpense(exp.id)} className="text-rose-300 hover:text-rose-500 p-1"><Trash2 size={16} /></button>
-                                                    )}
+                                                    {exp.status !== 'cancelled' && (() => {
+                                                        const status = getTripStatus(selectedTrip.id);
+                                                        const isLocked = status.label === '核准中' || status.label === '核銷完成';
+                                                        return !isLocked && (
+                                                            <button onClick={() => handleDeleteExpense(exp.id)} className="text-rose-300 hover:text-rose-500 p-1"><Trash2 size={16} /></button>
+                                                        );
+                                                    })()}
                                                     {exp.status === 'cancelled' && <span className="text-xs text-stone-400 font-bold">已刪除</span>}
                                                 </div>
                                             </div>

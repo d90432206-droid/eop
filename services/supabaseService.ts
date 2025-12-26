@@ -331,12 +331,46 @@ export const updateLeaveStatus = async (id: number, status: string, newLogEntry?
       .eq('end_time', currentData.end_time);
 
     if (bookings && bookings.length > 0) {
-      // Update all matching bookings (usually just one)
+      // Update all matching bookings
       const bookingIds = bookings.map(b => b.id);
+
+      // Determine new vehicle booking status based on Leave Request status
+      // If Leave is cancelled/rejected/returned -> Vehicle status = 'cancelled' (freed up)
+      // If Leave is approved -> Vehicle status = 'approved'
+      // If Leave is pending* -> Vehicle status = 'pending'
+
+      let newVehicleStatus: RequestStatus = 'pending';
+      if (status === 'approved') newVehicleStatus = 'approved';
+      else if (['cancelled', 'rejected', 'returned'].includes(status)) newVehicleStatus = 'cancelled';
+      else newVehicleStatus = 'pending';
+
       await supabase
         .from('vehicle_bookings')
-        .update({ status: status })
+        .update({ status: newVehicleStatus })
         .in('id', bookingIds);
+
+      // If cancelled, ensure vehicle is freed immediately just in case it was 'ongoing'
+      if (newVehicleStatus === 'cancelled') {
+        // Logic to free vehicle is implicit if we rely on bookings state, 
+        // but strictly we might need to set is_available=true if it was marked false.
+        // However, our getVehicles logic relies on calculating availability or just db trigger?
+        // In this app, availability is a column in `vehicles`. We should reset it if active.
+        // Complexity: We don't know easily which vehicle ID here without another fetch or join.
+        // For now, let's rely on 'cancelled' status being filtered out in availability checks 
+        // OR the auto-availability logic. 
+
+        // Actually, `getVehicles` usually just checks `is_available` column.
+        // We should probably explicitly free the vehicle if it was booked.
+        // Let's do a safe update:
+        for (const b of bookings) {
+          // We need to fetch the vehicle_id from the booking first if we didn't select it.
+          // We selected 'id' only above. Let's fix that.
+          const { data: fullBooking } = await supabase.from('vehicle_bookings').select('vehicle_id').eq('id', b.id).single();
+          if (fullBooking) {
+            await supabase.from('vehicles').update({ is_available: true }).eq('id', fullBooking.vehicle_id);
+          }
+        }
+      }
     }
   }
 };
@@ -369,7 +403,43 @@ export const getMyBusinessTrips = async (employeeId: string): Promise<LeaveReque
 
 // --- Vehicles ---
 
+const checkAndProcessAutoReturns = async () => {
+  // Logic: Find 'approved' bookings where end_time < NOW
+  const now = new Date().toISOString();
+
+  const { data: expiredBookings } = await supabase
+    .from('vehicle_bookings')
+    .select('id, vehicle_id, start_mileage')
+    .eq('status', 'approved')
+    .lt('end_time', now);
+
+  if (expiredBookings && expiredBookings.length > 0) {
+    console.log(`Found ${expiredBookings.length} expired vehicle bookings. Auto-returning...`);
+
+    for (const booking of expiredBookings) {
+      // 1. Mark booking as returned
+      await supabase
+        .from('vehicle_bookings')
+        .update({
+          status: 'returned',
+          returned_at: now,
+          return_condition: 'Auto-returned (Time Expired)',
+          end_mileage: booking.start_mileage // Assume no extra mileage if auto-returned or user updates later
+        })
+        .eq('id', booking.id);
+
+      // 2. Free the vehicle
+      await supabase
+        .from('vehicles')
+        .update({ is_available: true })
+        .eq('id', booking.vehicle_id);
+    }
+  }
+};
+
 export const getVehicles = async (): Promise<Vehicle[]> => {
+  await checkAndProcessAutoReturns(); // Lazy check
+
   const { data, error } = await supabase
     .from('vehicles')
     .select('*')
@@ -427,6 +497,8 @@ export const cancelVehicleBooking = async (id: number): Promise<void> => {
 };
 
 export const getVehicleBookings = async (): Promise<VehicleBooking[]> => {
+  await checkAndProcessAutoReturns(); // Lazy check
+
   const { data, error } = await supabase
     .from('vehicle_bookings')
     .select('*, vehicles(name, plate_number), employees(full_name)')
