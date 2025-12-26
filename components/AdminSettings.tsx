@@ -14,6 +14,11 @@ const AdminSettings: React.FC = () => {
     const [pendingExpenses, setPendingExpenses] = useState<ExpenseClaim[]>([]);
     const [historyExpenses, setHistoryExpenses] = useState<ExpenseClaim[]>([]);
     const [expenseView, setExpenseView] = useState<'pending' | 'history'>('pending');
+
+    // History Filter
+    const [startDate, setStartDate] = useState(new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().substring(0, 10)); // 1st of month
+    const [endDate, setEndDate] = useState(new Date().toISOString().substring(0, 10)); // Today
+
     const [printingGroup, setPrintingGroup] = useState<{ tripId: string, items: ExpenseClaim[] } | null>(null);
     const printRef = useRef<HTMLDivElement>(null);
 
@@ -28,7 +33,7 @@ const AdminSettings: React.FC = () => {
             const expenses = await getAdminExpenseClaims();
             setPendingExpenses(expenses);
 
-            const history = await getAdminHistoryExpenseClaims();
+            const history = await getAdminHistoryExpenseClaims(startDate, endDate);
             setHistoryExpenses(history);
         } catch (e) {
             console.error(e);
@@ -40,6 +45,13 @@ const AdminSettings: React.FC = () => {
     useEffect(() => {
         fetchData();
     }, []);
+
+    // Specific fetch for history when dates or view changes
+    useEffect(() => {
+        if (activeTab === 'expenses' && expenseView === 'history') {
+            getAdminHistoryExpenseClaims(startDate, endDate).then(setHistoryExpenses);
+        }
+    }, [startDate, endDate, activeTab, expenseView]);
 
     const handleApplyDemoData = async () => {
         if (!confirm("確定要套用 10 人模擬架構嗎？\n這將重置現有員工資料與權限。")) return;
@@ -151,9 +163,33 @@ const AdminSettings: React.FC = () => {
             {/* EXPENSE TAB */}
             {activeTab === 'expenses' && (
                 <div className="space-y-6">
-                    <div className="flex bg-stone-100 p-1 rounded-lg w-fit">
-                        <button onClick={() => setExpenseView('pending')} className={`px-3 py-1.5 rounded-md text-sm font-bold transition-all ${expenseView === 'pending' ? 'bg-white shadow text-stone-800' : 'text-stone-500 hover:text-stone-700'}`}>待審核</button>
-                        <button onClick={() => setExpenseView('history')} className={`px-3 py-1.5 rounded-md text-sm font-bold transition-all ${expenseView === 'history' ? 'bg-white shadow text-stone-800' : 'text-stone-500 hover:text-stone-700'}`}>歷史紀錄</button>
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                        <div className="flex bg-stone-100 p-1 rounded-lg w-fit">
+                            <button onClick={() => setExpenseView('pending')} className={`px-3 py-1.5 rounded-md text-sm font-bold transition-all ${expenseView === 'pending' ? 'bg-white shadow text-stone-800' : 'text-stone-500 hover:text-stone-700'}`}>待審核</button>
+                            <button onClick={() => setExpenseView('history')} className={`px-3 py-1.5 rounded-md text-sm font-bold transition-all ${expenseView === 'history' ? 'bg-white shadow text-stone-800' : 'text-stone-500 hover:text-stone-700'}`}>歷史紀錄</button>
+                        </div>
+
+                        {expenseView === 'history' && (
+                            <div className="flex items-center gap-2 bg-white p-2 rounded-lg border border-stone-200 shadow-sm text-sm">
+                                <span className="text-stone-500 font-bold">區間:</span>
+                                <input
+                                    type="date"
+                                    value={startDate}
+                                    onChange={(e) => setStartDate(e.target.value)}
+                                    className="border border-stone-200 rounded px-2 py-1 text-stone-700"
+                                />
+                                <span className="text-stone-400">~</span>
+                                <input
+                                    type="date"
+                                    value={endDate}
+                                    onChange={(e) => setEndDate(e.target.value)}
+                                    className="border border-stone-200 rounded px-2 py-1 text-stone-700"
+                                />
+                                <button onClick={() => getAdminHistoryExpenseClaims(startDate, endDate).then(setHistoryExpenses)} className="ml-2 p-1 text-stone-400 hover:text-accent">
+                                    <RefreshCw size={14} />
+                                </button>
+                            </div>
+                        )}
                     </div>
 
                     {Object.keys(activeGroupedExpenses).length === 0 ? (
@@ -207,8 +243,8 @@ const AdminSettings: React.FC = () => {
                                                                 <span className="text-xs bg-stone-100 px-2 py-1 rounded text-stone-600">{item.category}</span>
                                                                 {expenseView === 'history' && (
                                                                     <span className={`text-[10px] px-1.5 py-0.5 rounded border ${item.status === 'approved' ? 'bg-emerald-50 border-emerald-200 text-emerald-600' :
-                                                                            item.status === 'rejected' || item.status === 'cancelled' ? 'bg-rose-50 border-rose-200 text-rose-600' :
-                                                                                'bg-stone-50 border-stone-200 text-stone-500'
+                                                                        item.status === 'rejected' || item.status === 'cancelled' ? 'bg-rose-50 border-rose-200 text-rose-600' :
+                                                                            'bg-stone-50 border-stone-200 text-stone-500'
                                                                         }`}>
                                                                         {item.status === 'approved' ? '已核准' :
                                                                             item.status === 'rejected' ? '已退回' :
