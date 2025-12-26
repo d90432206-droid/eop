@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { getEmployees, seedDemoData, getSystemStats, getAdminExpenseClaims, updateAdminExpenseStatus } from '../services/supabaseService';
+import { getEmployees, seedDemoData, getSystemStats, getAdminExpenseClaims, updateAdminExpenseStatus, getAdminHistoryExpenseClaims } from '../services/supabaseService';
 import { Employee, ExpenseClaim } from '../types';
 import { Users, Database, ShieldAlert, RefreshCw, Activity, Layout, Download, Palette, FileJson, CheckCircle, Receipt, Printer, Check, XCircle } from 'lucide-react';
 
@@ -12,6 +12,8 @@ const AdminSettings: React.FC = () => {
 
     // Expense Admin State
     const [pendingExpenses, setPendingExpenses] = useState<ExpenseClaim[]>([]);
+    const [historyExpenses, setHistoryExpenses] = useState<ExpenseClaim[]>([]);
+    const [expenseView, setExpenseView] = useState<'pending' | 'history'>('pending');
     const [printingGroup, setPrintingGroup] = useState<{ tripId: string, items: ExpenseClaim[] } | null>(null);
     const printRef = useRef<HTMLDivElement>(null);
 
@@ -25,6 +27,9 @@ const AdminSettings: React.FC = () => {
 
             const expenses = await getAdminExpenseClaims();
             setPendingExpenses(expenses);
+
+            const history = await getAdminHistoryExpenseClaims();
+            setHistoryExpenses(history);
         } catch (e) {
             console.error(e);
         } finally {
@@ -116,6 +121,17 @@ const AdminSettings: React.FC = () => {
         return acc;
     }, {} as Record<string, ExpenseClaim[]>);
 
+    // Group history expenses
+    const groupedHistory = historyExpenses.reduce((acc, expense) => {
+        const match = expense.description?.match(/^\[TRIP-(\d+)\]/);
+        const tripId = match ? match[1] : 'Unknown';
+        if (!acc[tripId]) acc[tripId] = [];
+        acc[tripId].push(expense);
+        return acc;
+    }, {} as Record<string, ExpenseClaim[]>);
+
+    const activeGroupedExpenses = expenseView === 'pending' ? groupedExpenses : groupedHistory;
+
     return (
         <div className="space-y-6">
             <div className="flex justify-between items-center border-b border-stone-200 pb-5">
@@ -135,10 +151,17 @@ const AdminSettings: React.FC = () => {
             {/* EXPENSE TAB */}
             {activeTab === 'expenses' && (
                 <div className="space-y-6">
-                    {Object.keys(groupedExpenses).length === 0 ? (
-                        <div className="text-center py-20 bg-stone-50 rounded-2xl border border-dashed border-stone-200 text-stone-400 font-bold">目前沒有待審核的費用申請</div>
+                    <div className="flex bg-stone-100 p-1 rounded-lg w-fit">
+                        <button onClick={() => setExpenseView('pending')} className={`px-3 py-1.5 rounded-md text-sm font-bold transition-all ${expenseView === 'pending' ? 'bg-white shadow text-stone-800' : 'text-stone-500 hover:text-stone-700'}`}>待審核</button>
+                        <button onClick={() => setExpenseView('history')} className={`px-3 py-1.5 rounded-md text-sm font-bold transition-all ${expenseView === 'history' ? 'bg-white shadow text-stone-800' : 'text-stone-500 hover:text-stone-700'}`}>歷史紀錄</button>
+                    </div>
+
+                    {Object.keys(activeGroupedExpenses).length === 0 ? (
+                        <div className="text-center py-20 bg-stone-50 rounded-2xl border border-dashed border-stone-200 text-stone-400 font-bold">
+                            {expenseView === 'pending' ? "目前沒有待審核的費用申請" : "尚無歷史紀錄"}
+                        </div>
                     ) : (
-                        Object.entries(groupedExpenses).map(([tripId, items]) => {
+                        Object.entries(activeGroupedExpenses).map(([tripId, items]) => {
                             const total = items.reduce((sum, i) => sum + i.amount, 0);
                             const firstItem = items[0];
                             const employeeName = (firstItem.employees as any)?.full_name || 'Unknown';
@@ -157,8 +180,12 @@ const AdminSettings: React.FC = () => {
                                         <div className="flex items-center gap-2">
                                             <span className="text-xl font-bold font-mono text-stone-800 mr-4">TWD {total.toLocaleString()}</span>
                                             <button onClick={() => handlePrintGroup(tripId, items)} className="p-2 text-stone-500 hover:bg-white rounded-lg border border-transparent hover:border-stone-200 transition-all"><Printer size={20} /></button>
-                                            <button onClick={() => handleRejectExpense(items.map(i => i.id))} className="flex items-center gap-1 bg-white border border-rose-200 text-rose-600 px-3 py-2 rounded-lg font-bold hover:bg-rose-50"><XCircle size={18} /> 退回</button>
-                                            <button onClick={() => handleApproveExpense(items.map(i => i.id))} className="flex items-center gap-1 bg-emerald-600 text-white px-3 py-2 rounded-lg font-bold hover:bg-emerald-700 shadow-md"><CheckCircle size={18} /> 核准</button>
+                                            {expenseView === 'pending' && (
+                                                <>
+                                                    <button onClick={() => handleRejectExpense(items.map(i => i.id))} className="flex items-center gap-1 bg-white border border-rose-200 text-rose-600 px-3 py-2 rounded-lg font-bold hover:bg-rose-50"><XCircle size={18} /> 退回</button>
+                                                    <button onClick={() => handleApproveExpense(items.map(i => i.id))} className="flex items-center gap-1 bg-emerald-600 text-white px-3 py-2 rounded-lg font-bold hover:bg-emerald-700 shadow-md"><CheckCircle size={18} /> 核准</button>
+                                                </>
+                                            )}
                                         </div>
                                     </div>
                                     <div className="p-0">
@@ -176,7 +203,19 @@ const AdminSettings: React.FC = () => {
                                                     <tr key={item.id}>
                                                         <td className="p-3 pl-6 font-mono text-stone-500">{item.claim_date}</td>
                                                         <td className="p-3">
-                                                            <span className="text-xs bg-stone-100 px-2 py-1 rounded text-stone-600">{item.category}</span>
+                                                            <div className="flex items-center gap-2">
+                                                                <span className="text-xs bg-stone-100 px-2 py-1 rounded text-stone-600">{item.category}</span>
+                                                                {expenseView === 'history' && (
+                                                                    <span className={`text-[10px] px-1.5 py-0.5 rounded border ${item.status === 'approved' ? 'bg-emerald-50 border-emerald-200 text-emerald-600' :
+                                                                            item.status === 'rejected' || item.status === 'cancelled' ? 'bg-rose-50 border-rose-200 text-rose-600' :
+                                                                                'bg-stone-50 border-stone-200 text-stone-500'
+                                                                        }`}>
+                                                                        {item.status === 'approved' ? '已核准' :
+                                                                            item.status === 'rejected' ? '已退回' :
+                                                                                item.status === 'cancelled' ? '已取消' : item.status}
+                                                                    </span>
+                                                                )}
+                                                            </div>
                                                         </td>
                                                         <td className="p-3 text-stone-800">{item.description?.replace(/^\[TRIP-\d+\]\s*/, '')}</td>
                                                         <td className="p-3 text-right pr-6 font-mono font-bold">{item.amount.toLocaleString()}</td>
