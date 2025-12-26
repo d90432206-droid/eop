@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { createExpenseClaim, getExpenseClaims, getCurrentUser, getMyBusinessTrips, getCurrentEmployee, updateExpenseStatus, createVehicleLog, getVehicles, getVehicleBookings, updateVehicleMileage, submitExpenseClaim } from '../services/supabaseService';
+import { createExpenseClaim, getExpenseClaims, getCurrentUser, getMyBusinessTrips, getCurrentEmployee, updateExpenseStatus, createVehicleLog, getVehicles, getVehicleBookings, updateVehicleMileage, submitExpenseClaim, getAllMyExpenseClaims } from '../services/supabaseService';
 import { ExpenseClaim, LeaveRequest, Employee, Vehicle, VehicleBooking } from '../types';
 import { Receipt, Globe, Plus, Utensils, BedDouble, Briefcase, CalendarClock, Info, Printer, ArrowRightCircle, CheckCircle, Trash2, Fuel, ChevronLeft, Download, FileText, ChevronRight, Send, Filter, Search } from 'lucide-react';
 
@@ -9,6 +9,7 @@ const ExpenseClaims: React.FC = () => {
     const [selectedTrip, setSelectedTrip] = useState<LeaveRequest | null>(null);
     const [tripExpenses, setTripExpenses] = useState<ExpenseClaim[]>([]);
     const [myTrips, setMyTrips] = useState<LeaveRequest[]>([]);
+    const [allMyExpenses, setAllMyExpenses] = useState<ExpenseClaim[]>([]);
 
     const [currentUserId, setCurrentUserId] = useState<string | null>(null);
     const [currentEmp, setCurrentEmp] = useState<Employee | null>(null);
@@ -43,6 +44,10 @@ const ExpenseClaims: React.FC = () => {
                 // Fetch approved business trips
                 const trips = await getMyBusinessTrips(user.id);
                 setMyTrips(trips);
+
+                // Fetch all expenses for status calculation
+                const allExp = await getAllMyExpenseClaims(user.id);
+                setAllMyExpenses(allExp);
             }
 
             const vs = await getVehicles();
@@ -134,10 +139,33 @@ const ExpenseClaims: React.FC = () => {
         try {
             await submitExpenseClaim(selectedTrip.id);
             await fetchTripExpenses(selectedTrip.id); // Refresh to see updated status
+
+            // Refresh global status
+            if (currentUserId) {
+                const allExp = await getAllMyExpenseClaims(currentUserId);
+                setAllMyExpenses(allExp);
+            }
             alert("✅ 費用申請已送出至總務部門！");
         } catch (e: any) {
             alert(e.message);
         }
+    };
+
+    const getTripStatus = (tripId: number) => {
+        const tripTag = `[TRIP-${tripId}]`;
+        const expenses = allMyExpenses.filter(e => e.description && e.description.includes(tripTag));
+
+        if (expenses.length === 0) return { label: '未申請', color: 'bg-stone-100 text-stone-500' };
+
+        const statuses = expenses.map(e => e.status);
+
+        // Priority Checks
+        if (statuses.some(s => s === 'returned' || s === 'rejected')) return { label: '退回/拒絕', color: 'bg-rose-100 text-rose-600' };
+        if (statuses.some(s => s === 'pending_dept' || s === 'pending_gm')) return { label: '核准中', color: 'bg-blue-100 text-blue-600' };
+        if (statuses.every(s => s === 'approved')) return { label: '核銷完成', color: 'bg-emerald-100 text-emerald-600' };
+        if (statuses.every(s => s === 'pending')) return { label: '未申請', color: 'bg-stone-100 text-stone-500' }; // Draft is technically not applied yet
+
+        return { label: '處理中', color: 'bg-amber-100 text-amber-600' }; // Mixed states fallback
     };
 
     const handlePrint = () => {
@@ -224,6 +252,7 @@ const ExpenseClaims: React.FC = () => {
                                 <th className="p-4 text-xs font-bold text-stone-500 uppercase">單號</th>
                                 <th className="p-4 text-xs font-bold text-stone-500 uppercase">申請人/部門</th>
                                 <th className="p-4 text-xs font-bold text-stone-500 uppercase">日期區間</th>
+                                <th className="p-4 text-xs font-bold text-stone-500 uppercase">核銷狀態</th>
                                 <th className="p-4 text-xs font-bold text-stone-500 uppercase">事由</th>
                                 <th className="p-4 text-xs font-bold text-stone-500 uppercase text-right">操作</th>
                             </tr>
@@ -245,6 +274,12 @@ const ExpenseClaims: React.FC = () => {
                                         </td>
                                         <td className="p-4 text-sm text-stone-600">
                                             {new Date(trip.start_time).toLocaleDateString()} ~ {new Date(trip.end_time).toLocaleDateString()}
+                                        </td>
+                                        <td className="p-4">
+                                            {(() => {
+                                                const status = getTripStatus(trip.id);
+                                                return <span className={`px-2 py-1 rounded text-xs font-bold ${status.color}`}>{status.label}</span>;
+                                            })()}
                                         </td>
                                         <td className="p-4 text-sm text-stone-600 max-w-xs truncate">{trip.reason}</td>
                                         <td className="p-4 text-right">
