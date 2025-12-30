@@ -105,7 +105,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         </div>
 
         {/* Weather & Time Widget */}
-        <div className="px-6 py-5 border-b border-stone-100 bg-stone-50/50">
+        <div className="px-6 py-5 border-b border-white/20 bg-white/30 backdrop-blur-md shadow-lg">
           <div className="flex items-center justify-between text-stone-500 mb-1">
             <div className="flex items-center gap-2 text-sm font-medium">
               <Clock size={16} className="text-accent" />

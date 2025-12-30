@@ -226,7 +226,7 @@ const AssetManagement: React.FC = () => {
                                 </div>
                                 <div className="col-span-1">
                                     <label className="block text-xs font-bold text-stone-500 mb-1">購入金額</label>
-                                    <input type="number" value={currentAsset.amount} onChange={e => setCurrentAsset({ ...currentAsset, amount: parseInt(e.target.value) || 0 })} className="w-full p-2 border border-stone-200 rounded-lg text-sm" />
+                                    <input type="number" value={currentAsset.amount === 0 ? '' : currentAsset.amount} onChange={e => setCurrentAsset({ ...currentAsset, amount: parseInt(e.target.value) || 0 })} className="w-full p-2 border border-stone-200 rounded-lg text-sm" />
                                 </div>
                             </div>
 

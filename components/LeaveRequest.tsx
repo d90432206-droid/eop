@@ -13,7 +13,7 @@ const LeaveRequestPage: React.FC = () => {
     const [empLoading, setEmpLoading] = useState(true);
 
     const LUNCH_START_HOUR = 12;
-    const LUNCH_START_MIN = 15;
+    const LUNCH_START_MIN = 0;
     const LUNCH_END_HOUR = 13;
     const LUNCH_END_MIN = 15;
 
@@ -121,10 +121,10 @@ const LeaveRequestPage: React.FC = () => {
     const handleQuickTimeSelect = (type: 'am' | 'pm') => {
         if (type === 'am') {
             setStartTime('08:00');
-            setEndTime('12:15');
+            setEndTime('12:00');
         } else {
             setStartTime('13:15');
-            setEndTime('17:30');
+            setEndTime('17:15');
         }
     };
 
@@ -139,9 +139,9 @@ const LeaveRequestPage: React.FC = () => {
         let remainingMinutes = hours * 60;
 
         while (remainingMinutes > 0) {
-            // Check if current time is inside lunch break (12:15 - 13:15)
+            // Check if current time is inside lunch break (12:00 - 13:15)
             const currentTimeVal = currentH * 60 + currentM;
-            const lunchStartVal = LUNCH_START_HOUR * 60 + LUNCH_START_MIN; // 735
+            const lunchStartVal = LUNCH_START_HOUR * 60 + LUNCH_START_MIN; // 720
             const lunchEndVal = LUNCH_END_HOUR * 60 + LUNCH_END_MIN;     // 795
 
             // If we are EXACTLY at lunch start or inside lunch block, jump to lunch end
@@ -288,11 +288,21 @@ const LeaveRequestPage: React.FC = () => {
         let current = new Date(start); current.setHours(0, 0, 0, 0);
         const loopEnd = new Date(end); loopEnd.setHours(0, 0, 0, 0);
 
+        // Updated Lunch: 12:00 - 13:15 (75m)
+        // Blocks:
+        // 1. 08:00 - 12:00 (4h)
+        // 2. 13:15 - 17:15 (4h) => Total 8h
+        // Note: Original was until 17:30? If 8h day, usually 8-12 + 13:15-17:15 = 8h.
+        // User requested: Special/Sick half day AM 08:00-12:15 (wait, user said 12:15 in prev request, but now said "不足4小時以4小時計" and "超過12:00的，一律計算到13:15")
+        // User example: "10:00他申請，計算到13:15，就是扣2小時".
+        // This suggests:
+        //  08:00-12:00 is Morning Block.
+        //  Lunch 12:00-13:15.
+        //  If end time falls in lunch, it extends to 13:15 but doesn't count duration.
+        // Let's use strict work blocks.
         const workBlocks = [
-            { sH: 8, sM: 0, eH: 10, eM: 0 },    // 08:00 - 10:00
-            { sH: 10, sM: 15, eH: 12, eM: 15 }, // 10:15 - 12:15
-            { sH: 13, sM: 15, eH: 15, eM: 15 }, // 13:15 - 15:15
-            { sH: 15, sM: 30, eH: 17, eM: 30 }, // 15:30 - 17:30
+            { sH: 8, sM: 0, eH: 12, eM: 0 },    // 08:00 - 12:00
+            { sH: 13, sM: 15, eH: 17, eM: 15 }, // 13:15 - 17:15 (Matches 4h PM)
         ];
 
         while (current <= loopEnd) {
@@ -301,10 +311,8 @@ const LeaveRequestPage: React.FC = () => {
 
             if (isOvertimeCalc || !currentIsWeekend) {
                 for (const block of workBlocks) {
-                    const bStart = new Date(current);
-                    bStart.setHours(block.sH, block.sM, 0, 0);
-                    const bEnd = new Date(current);
-                    bEnd.setHours(block.eH, block.eM, 0, 0);
+                    const bStart = new Date(current); bStart.setHours(block.sH, block.sM, 0, 0);
+                    const bEnd = new Date(current); bEnd.setHours(block.eH, block.eM, 0, 0);
 
                     const actualStart = start > bStart ? start : bStart;
                     const actualEnd = end < bEnd ? end : bEnd;
@@ -317,6 +325,16 @@ const LeaveRequestPage: React.FC = () => {
             }
             current.setDate(current.getDate() + 1);
         }
+
+        // Apply Rounding Rules based on Type (We need leaveType here, but this function is generic)
+        // We will assume this returns raw hours and rounding happens in the UI/Submit logic?
+        // Actually, the `duration` variable in the component calls this. We can apply rounding there.
+        // But `calculateUsedLeave` also uses this. That might need raw or rounded?
+        // Usually `Used` should match what was deducted.
+        // Let's keep this returning RAW hours, and apply specific rules in the component variable `duration`?
+        // Accessing `leaveType` state inside this function would be safer if we passed it or moved logic out.
+        // Since `calculateUsedLeave` iterates HISTORY, we can't depend on current `leaveType` state.
+
         return parseFloat(totalHours.toFixed(2));
     }
 
@@ -392,7 +410,42 @@ const LeaveRequestPage: React.FC = () => {
 
     const fullStart = getStartDateTime();
     const fullEnd = getEndDateTime();
-    const duration = calculateDurationLogic(new Date(fullStart), new Date(fullEnd), isOvertime);
+    const fullStart = getStartDateTime();
+    const fullEnd = getEndDateTime();
+
+    // Calculate Raw Duration first
+    const rawDuration = calculateDurationLogic(new Date(fullStart), new Date(fullEnd), isOvertime);
+
+    // Apply Rounding Logic
+    let duration = rawDuration;
+    if (!isOvertime) {
+        if (leaveType === 'annual' || leaveType === 'sick') {
+            // Rule 1: Special/Sick - <=4h -> 4h; >4h & <=8h -> 8h; >8h (integers?) 
+            // We assume per day. If multi-day, this logic might need refinement, but start with total.
+            // If it's a single day request:
+            if (rawDuration > 0 && rawDuration <= 4) duration = 4;
+            else if (rawDuration > 4 && rawDuration <= 8) duration = 8;
+            else if (rawDuration > 8) {
+                // For multi-day, maybe maintain integers? Or 8h multiples?
+                // Let's assume just integer rounding if > 8? Or round up to next 4h block?
+                // "不足4小時以4小時計，不足8小時以8小時計" implies steps of 4.
+                duration = Math.ceil(rawDuration / 4) * 4;
+            }
+        } else if (leaveType === 'other') {
+            // Rule 2: Personal Leave - Round up to 2/4/6/8...
+            // "位數都以小時個位數計算" -> integers. "不足2/4/6/8...以進位"
+            if (rawDuration > 0) {
+                const ceiling = Math.ceil(rawDuration);
+                // Ensure it matches 2,4,6,8 steps
+                if (ceiling % 2 !== 0) duration = ceiling + 1;
+                else duration = ceiling;
+            }
+        } else if (leaveType === 'business') {
+            // Rule 3: Business Trip - Integer calculation
+            duration = Math.ceil(rawDuration);
+        }
+    }
+
     // Requirement: Meal allowance if Overtime End >= 19:30
     const mealAllowance = isOvertime && new Date(fullEnd).getHours() * 60 + new Date(fullEnd).getMinutes() >= 19 * 60 + 30; // 19:30
     const quotaInfo = getQuotaDisplay();
@@ -414,18 +467,9 @@ const LeaveRequestPage: React.FC = () => {
             const ovError = validateOvertimeRequest(new Date(fullStart), new Date(fullEnd), duration);
             if (ovError) { alert(`❌ 加班規則錯誤：${ovError}`); return; }
         } else if (leaveType === 'other') {
-            // Requirement: Personal leave multiples of 2, 4, 6, 8
-            const validHours = [2, 4, 6, 8, 16, 24, 32]; // Accommodate longer leaves too if needed, but strict requirement "2/4/6/8"
-            // Let's assume per day or total. Requirement says "2/4/6/8 的倍數" (multiples of 2/4/6/8?? Usually means 2, 4, 6, 8 blocks).
-            // Actually "2/4/6/8 的倍數" probably means just even numbers? Or specific blocks?
-            // "事假最少的請假時數以 2/4/6/8 的倍數計算" -> likely means steps of 2 hours? Or must be exactly 2, 4, 6, 8?
-            // Let's interpret as: Must be divisible by 2? Or specifically one of those chunks?
-            // "2/4/6/8 的倍數" might be "multiples of 2" (2, 4, 6, 8, 10...)
-            // But 2/4/6/8 explicitly listed suggests chunks. 
-            // Common TW HR rule: Min 2 hours? or Half day (4)?
-            // Let's stick to "Must be a multiple of 2 hours" as a safe interpretation of "2/4/6/8..."
+            // Requirement: Personal leave multiples of 2, 4, 6, 8 (Validated by calculation above, just double check)
             if (duration % 2 !== 0) {
-                alert("❌ 事假時數必須為 2、4、6、8 小時的倍數 (如 2hr, 4hr...)");
+                alert("❌ 事假時數計算錯誤，必須為 2、4、6、8 小時的倍數");
                 return;
             }
         }
@@ -841,8 +885,8 @@ const LeaveRequestPage: React.FC = () => {
                                     {/* Quick Selection for AM/PM */}
                                     {leaveType === 'annual' || leaveType === 'sick' ? (
                                         <div className="flex gap-2 mt-2">
-                                            <button type="button" onClick={() => handleQuickTimeSelect('am')} className="flex-1 py-1.5 bg-stone-50 border border-stone-200 rounded-lg text-xs font-bold text-stone-600 hover:bg-stone-100">上午 (08:00-12:15)</button>
-                                            <button type="button" onClick={() => handleQuickTimeSelect('pm')} className="flex-1 py-1.5 bg-stone-50 border border-stone-200 rounded-lg text-xs font-bold text-stone-600 hover:bg-stone-100">下午 (13:15-17:30)</button>
+                                            <button type="button" onClick={() => handleQuickTimeSelect('am')} className="flex-1 py-1.5 bg-stone-50 border border-stone-200 rounded-lg text-xs font-bold text-stone-600 hover:bg-stone-100">上午 (08:00-12:00)</button>
+                                            <button type="button" onClick={() => handleQuickTimeSelect('pm')} className="flex-1 py-1.5 bg-stone-50 border border-stone-200 rounded-lg text-xs font-bold text-stone-600 hover:bg-stone-100">下午 (13:15-17:15)</button>
                                         </div>
                                     ) : leaveType === 'other' ? (
                                         <div className="flex gap-2 mt-2 flex-wrap">
