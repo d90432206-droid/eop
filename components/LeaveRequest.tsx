@@ -1155,7 +1155,7 @@ const LeaveRequestPage: React.FC = () => {
 
                         <div className="bg-white rounded-2xl shadow-sm border border-stone-200 overflow-hidden">
                             <div className="overflow-x-auto">
-                                <table className="min-w-full divide-y divide-stone-200">
+                                <table className="min-w-full border-separate border-spacing-0">
                                     <thead className="bg-stone-50">
                                         <tr>
                                             <th className="px-6 py-4 text-left text-xs font-bold text-stone-500 uppercase tracking-wider">申請人/類別</th>

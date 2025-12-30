@@ -205,7 +205,13 @@ const ExpenseClaims: React.FC = () => {
                     alert('沒有待審核的項目');
                     return;
                 }
-                await Promise.all(pendingItems.map(e => updateExpenseStatus(e.id, 'pending_dept')));
+                // Filter out any items that might not have a valid ID (though they should)
+                const itemsToSubmit = pendingItems.filter(e => typeof e.id === 'number');
+                if (itemsToSubmit.length === 0) {
+                    alert('沒有有效的待審核項目 (ID Error)');
+                    return;
+                }
+                await Promise.all(itemsToSubmit.map(e => updateExpenseStatus(e.id, 'pending_dept')));
                 await refreshData();
                 fetchGeneralExpenses(); // Refresh local list
             }
@@ -592,25 +598,24 @@ const ExpenseClaims: React.FC = () => {
                     `}</style>
 
                     <div className="text-center border-b-2 border-black pb-4 mb-6">
-                        <h1 className="text-3xl font-bold tracking-widest mb-2">{expenseType === 'trip' ? '出差旅費報告書' : '支出憑單核銷申請'}</h1>
+                        <h1 className="text-3xl font-bold tracking-widest mb-2">{expenseType === 'trip' ? '出差旅費報告書' : '一般支出'}</h1>
                         <h2 className="text-lg">{expenseType === 'trip' ? 'Travel Expense Report' : 'Payment Voucher'}</h2>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4 mb-6 text-sm">
                         <div>
                             <p className="mb-2"><span className="font-bold w-24 inline-block">申請日期:</span> {new Date().toLocaleDateString()}</p>
-                            {/* Updated to show Trip Applicant Info correctly */}
-                            <p className="mb-2"><span className="font-bold w-24 inline-block">申請部門:</span> {(selectedTrip?.employees as any)?.department || currentEmp?.department}</p>
-                            <p className="mb-2"><span className="font-bold w-24 inline-block">申請人:</span> {(selectedTrip?.employees as any)?.full_name || currentEmp?.full_name} ({(selectedTrip?.employees as any)?.job_title || currentEmp?.job_title})</p>
+                            <p className="mb-2"><span className="font-bold w-24 inline-block">申請部門:</span> {currentEmp?.department}</p>
+                            <p className="mb-2"><span className="font-bold w-24 inline-block">申請人:</span> {currentEmp?.full_name} ({currentEmp?.job_title})</p>
                         </div>
                         <div className="text-right">
-                            {expenseType === 'trip' ? (
+                            {expenseType === 'trip' && selectedTrip ? (
                                 <>
-                                    <p className="mb-2"><span className="font-bold w-24 inline-block">出差單號:</span> #{selectedTrip?.id}</p>
-                                    <p className="mb-2"><span className="font-bold w-24 inline-block">出差期間:</span> {selectedTrip ? `${new Date(selectedTrip.start_time).toLocaleDateString()} ~ ${new Date(selectedTrip.end_time).toLocaleDateString()}` : ''}</p>
+                                    <p className="mb-2"><span className="font-bold">單號:</span> #{selectedTrip.id}</p>
+                                    <p className="mb-2"><span className="font-bold">期間:</span> {new Date(selectedTrip.start_time).toLocaleDateString()} ~ {new Date(selectedTrip.end_time).toLocaleDateString()}</p>
                                 </>
                             ) : (
-                                <p className="mb-2"><span className="font-bold w-24 inline-block">單據類型:</span> 一般支出 (雜支/公務車)</p>
+                                <p className="mb-2"><span className="font-bold">單據類型:</span> 一般支出</p>
                             )}
                         </div>
                     </div>
