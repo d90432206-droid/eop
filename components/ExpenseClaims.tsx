@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { createExpenseClaim, getExpenseClaims, getCurrentUser, getMyBusinessTrips, getCurrentEmployee, updateExpenseStatus, createVehicleLog, getVehicles, getVehicleBookings, updateVehicleMileage, submitExpenseClaim, getAllMyExpenseClaims, createGeneralVoucher, getMyGeneralVouchers } from '../services/supabaseService';
+import { createExpenseClaim, getExpenseClaims, getCurrentUser, getMyBusinessTrips, getCurrentEmployee, updateExpenseStatus, createVehicleLog, getVehicles, getVehicleBookings, updateVehicleMileage, submitExpenseClaim, getAllMyExpenseClaims, createGeneralVoucher, getMyGeneralVouchers, deleteGeneralVoucher } from '../services/supabaseService';
 import { ExpenseClaim, LeaveRequest, Employee, Vehicle, VehicleBooking } from '../types';
 import { Receipt, Globe, Plus, Utensils, BedDouble, Briefcase, CalendarClock, Info, Printer, ArrowRightCircle, CheckCircle, Trash2, Fuel, ChevronLeft, Download, FileText, ChevronRight, Send, Filter, Search } from 'lucide-react';
 
@@ -285,9 +285,21 @@ const ExpenseClaims: React.FC = () => {
             const newVoucher = await createGeneralVoucher(currentEmp.id);
             if (newVoucher) {
                 setGeneralVouchers([newVoucher, ...generalVouchers]);
-                handleSelectTrip(newVoucher);
+                // Removed auto-switch
             }
         } catch (e) { console.error(e); }
+    }
+
+    const handleDeleteVoucher = async (voucherId: number, e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (!confirm("確定要刪除此一般費用憑單嗎？相關明細也將被刪除。")) return;
+        try {
+            await deleteGeneralVoucher(voucherId);
+            setGeneralVouchers(generalVouchers.filter(v => v.id !== voucherId));
+            if (selectedTrip?.id === voucherId) setSelectedTrip(null);
+        } catch (error: any) {
+            alert("刪除失敗: " + error.message);
+        }
     }
 
     // -- RENDER: List View --
@@ -347,18 +359,24 @@ const ExpenseClaims: React.FC = () => {
                                                 <td className="p-4 text-sm text-stone-600">{new Date(voucher.created_at || '').toLocaleDateString()}</td>
                                                 <td className="p-4">
                                                     {(() => {
-                                                        const status = getTripStatus(voucher.id); // Reusing logic
-                                                        // Override label for clarity? No, status codes are same.
-                                                        // Just ensure 'business' status is used correctly.
-                                                        // If it's a 'pending' general voucher, show '草稿' or '未送出'?
+                                                        const status = getTripStatus(voucher.id);
                                                         const label = voucher.status === 'pending' ? '草稿 / 未送出' : status.label;
                                                         const color = voucher.status === 'pending' ? 'bg-stone-100 text-stone-600' : status.color;
                                                         return <span className={`px-2 py-1 rounded text-xs font-bold ${color}`}>{label}</span>;
                                                     })()}
                                                 </td>
                                                 <td className="p-4 text-sm text-stone-600">{voucher.reason}</td>
-                                                <td className="p-4 text-right">
-                                                    <button className="text-sm font-bold text-accent hover:text-accent-dark flex items-center justify-end gap-1 px-3 py-1.5 rounded-lg border border-transparent hover:bg-white hover:border-stone-200 transition-all">
+                                                <td className="p-4 text-right flex justify-end items-center gap-2">
+                                                    {(voucher.status === 'pending') && (
+                                                        <button
+                                                            onClick={(e) => handleDeleteVoucher(voucher.id, e)}
+                                                            className="text-stone-400 hover:text-rose-500 hover:bg-rose-50 p-2 rounded-full transition-all"
+                                                            title="刪除憑單"
+                                                        >
+                                                            <Trash2 size={16} />
+                                                        </button>
+                                                    )}
+                                                    <button className="text-sm font-bold text-accent hover:text-accent-dark flex items-center gap-1 px-3 py-1.5 rounded-lg border border-transparent hover:bg-white hover:border-stone-200 transition-all">
                                                         查看明細 <ArrowRightCircle size={16} />
                                                     </button>
                                                 </td>

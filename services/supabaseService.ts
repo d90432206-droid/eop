@@ -415,6 +415,21 @@ export const createGeneralVoucher = async (employeeId: string, customDate?: stri
   return data as LeaveRequest;
 };
 
+
+export const deleteGeneralVoucher = async (voucherId: number) => {
+  // Delete expenses first to be safe, then the voucher (LeaveRequest)
+  // Assuming cascade might not be set up, so manual cleanup.
+  // 1. Delete expenses
+  await supabase.from('expense_claims').delete().eq('leave_request_id', voucherId);
+  // 2. Delete voucher
+  const { error } = await supabase.from('leave_requests').delete().eq('id', voucherId);
+
+  if (error) {
+    console.error('Delete Voucher Error:', error);
+    throw error;
+  }
+};
+
 export const getMyGeneralVouchers = async (employeeId: string): Promise<LeaveRequest[]> => {
   const { data, error } = await supabase
     .from('leave_requests')
