@@ -699,7 +699,7 @@ export const getAssets = async (): Promise<Asset[]> => {
     .order('purchase_date', { ascending: false });
 
   if (error) return [];
-  return data as Asset[];
+  return (data || []) as Asset[];
 };
 
 export const createAsset = async (asset: Omit<Asset, 'id' | 'created_at'>): Promise<void> => {
