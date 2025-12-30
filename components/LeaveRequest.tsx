@@ -410,8 +410,6 @@ const LeaveRequestPage: React.FC = () => {
 
     const fullStart = getStartDateTime();
     const fullEnd = getEndDateTime();
-    const fullStart = getStartDateTime();
-    const fullEnd = getEndDateTime();
 
     // Calculate Raw Duration first
     const rawDuration = calculateDurationLogic(new Date(fullStart), new Date(fullEnd), isOvertime);
