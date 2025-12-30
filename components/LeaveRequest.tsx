@@ -885,9 +885,9 @@ const LeaveRequestPage: React.FC = () => {
                                     {/* Quick Selection for AM/PM */}
                                     {leaveType === 'annual' || leaveType === 'sick' || leaveType === 'other' ? (
                                         <div className="flex gap-2 mt-2">
-                                            <button type="button" onClick={() => handleQuickTimeSelect('am')} className="flex-1 py-1.5 bg-stone-50 border border-stone-200 rounded-lg text-xs font-bold text-stone-600 hover:bg-stone-100">上午 (08:00~12:15)</button>
-                                            <button type="button" onClick={() => handleQuickTimeSelect('pm')} className="flex-1 py-1.5 bg-stone-50 border border-stone-200 rounded-lg text-xs font-bold text-stone-600 hover:bg-stone-100">下午 (13:15-17:30)</button>
-                                            <button type="button" onClick={() => handleQuickTimeSelect('full')} className="flex-1 py-1.5 bg-stone-50 border border-stone-200 rounded-lg text-xs font-bold text-stone-600 hover:bg-stone-100">全天 (08:00-17:30)</button>
+                                            <button type="button" onClick={() => handleQuickTimeSelect('am')} className="flex-1 py-2 bg-stone-50 border border-stone-200 rounded-lg text-xs font-bold text-stone-600 hover:bg-stone-100 whitespace-nowrap">上午 (08:00 ~ 12:15)</button>
+                                            <button type="button" onClick={() => handleQuickTimeSelect('pm')} className="flex-1 py-2 bg-stone-50 border border-stone-200 rounded-lg text-xs font-bold text-stone-600 hover:bg-stone-100 whitespace-nowrap">下午 (13:15 ~ 17:30)</button>
+                                            <button type="button" onClick={() => handleQuickTimeSelect('full')} className="flex-1 py-2 bg-stone-50 border border-stone-200 rounded-lg text-xs font-bold text-stone-600 hover:bg-stone-100 whitespace-nowrap">全天 (08:00 ~ 17:30)</button>
                                         </div>
                                     ) : null}
                                     {leaveType === 'other' ? (
@@ -1153,10 +1153,10 @@ const LeaveRequestPage: React.FC = () => {
                             </div>
                         </div>
 
-                        <div className="bg-white rounded-2xl shadow-sm ring-1 ring-inset ring-stone-200 overflow-hidden">
+                        <div className="bg-white rounded-2xl shadow-sm border border-stone-200 overflow-hidden">
                             <div className="overflow-x-auto">
                                 <table className="min-w-full divide-y divide-stone-200">
-                                    <thead className="bg-stone-50">
+                                    <thead className="bg-stone-50 border-b border-stone-200">
                                         <tr>
                                             <th className="px-6 py-4 text-left text-xs font-bold text-stone-500 uppercase tracking-wider">申請人/類別</th>
                                             <th className="px-6 py-4 text-left text-xs font-bold text-stone-500 uppercase tracking-wider">時間與事由</th>

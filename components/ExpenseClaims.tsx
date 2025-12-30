@@ -82,6 +82,11 @@ const ExpenseClaims: React.FC = () => {
     // Actually schema links `leave_request_id`. For general, it might be NULL.
     // Let's assume NULL `leave_request_id` means General Expense.
     const fetchGeneralExpenses = () => {
+        // Safety check
+        if (!allMyExpenses || !Array.isArray(allMyExpenses)) {
+            setTripExpenses([]);
+            return;
+        }
         // Fix: DB does not store leave_request_id, so we must filter by Description Tag.
         // General expenses are those that do NOT start with [TRIP-...]
         const general = allMyExpenses.filter(e => !e.description?.startsWith('[TRIP-'));
