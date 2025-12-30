@@ -232,6 +232,7 @@ const ExpenseClaims: React.FC = () => {
         // General Expense Logic
         if (expenseType === 'general') {
             // For general, we check the displayed expenses (tripExpenses)
+            if (!tripExpenses || !Array.isArray(tripExpenses)) return { label: '一般報銷', color: 'bg-stone-100 text-stone-500' };
             const statuses = tripExpenses.map(e => e.status);
             if (statuses.length === 0) return { label: '一般報銷', color: 'bg-stone-100 text-stone-500' };
 
@@ -537,6 +538,9 @@ const ExpenseClaims: React.FC = () => {
                                 {(() => {
                                     // For General, only show Drafts & Returned by default to keep "workspace" clean?
                                     // Or just separate them. Let's separate.
+                                    // Safety check
+                                    if (!tripExpenses || !Array.isArray(tripExpenses)) return null;
+
                                     const drafts = tripExpenses.filter(e => e.status === 'pending' || e.status === 'returned');
                                     const history = tripExpenses.filter(e => e.status !== 'pending' && e.status !== 'returned');
 
