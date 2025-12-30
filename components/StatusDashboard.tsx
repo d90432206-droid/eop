@@ -44,7 +44,7 @@ const StatusDashboard: React.FC = () => {
         let hasUpdates = false;
 
         currentEmployees.forEach(emp => {
-            // Find an active, approved leave request for this employee RIGHT NOW
+            // 1. Check for Active Leave Request (Higher Priority)
             const activeReq = allLeaves.find(req => {
                 const start = new Date(req.start_time);
                 const end = new Date(req.end_time);
@@ -57,29 +57,30 @@ const StatusDashboard: React.FC = () => {
             });
 
             if (activeReq) {
+                // If there IS a leave request, enforce it
                 let targetStatus: EmployeeStatus | null = null;
+                if (activeReq.leave_type === 'business') targetStatus = 'out';
+                else if (['annual', 'sick', 'other'].includes(activeReq.leave_type)) targetStatus = 'leave';
 
-                // Determine target status based on leave type
-                if (activeReq.leave_type === 'business') {
-                    targetStatus = 'out';
-                } else if (['annual', 'sick', 'other'].includes(activeReq.leave_type)) {
-                    targetStatus = 'leave';
-                }
-                // Note: 'overtime' usually happens in office, so we might keep 'in_office' or ignore it.
-                // We only auto-update if strictly 'out' or 'leave'.
-
-                // If a target status exists AND it differs from current status, update it.
                 if (targetStatus && emp.current_status !== targetStatus) {
-                    // Update DB to sync reality
-                    const p = updateEmployeeStatus(
-                        emp.id,
-                        targetStatus,
-                        activeReq.reason, // Auto-fill note from reason
-                        activeReq.end_time // Auto-fill return time
-                    );
-                    updates.push(p);
+                    updates.push(updateEmployeeStatus(emp.id, targetStatus, activeReq.reason, activeReq.end_time));
                     hasUpdates = true;
-                    console.log(`[Auto-Sync] Updating ${emp.full_name} to ${targetStatus} based on ${activeReq.leave_type}`);
+                    console.log(`[Auto-Sync] Updating ${emp.full_name} to ${targetStatus}`);
+                }
+            } else {
+                // 2. No Active Request -> Check if we need to Auto-Return
+                // Only if status is currently 'out', 'meeting', 'abroad' AND time has passed
+                if (['out', 'meeting', 'abroad', 'leave'].includes(emp.current_status)) {
+                    // Check if they had a return time set
+                    if (emp.expected_return) {
+                        const returnTime = new Date(emp.expected_return);
+                        if (returnTime <= now) {
+                            // Time expired! Revert to in_office
+                            updates.push(updateEmployeeStatus(emp.id, 'in_office', null, null));
+                            hasUpdates = true;
+                            console.log(`[Auto-Return] Reverting ${emp.full_name} to in_office (Expired: ${emp.expected_return})`);
+                        }
+                    }
                 }
             }
         });
