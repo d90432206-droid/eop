@@ -105,7 +105,7 @@ const ExpenseClaims: React.FC = () => {
         setSelectedTrip(null);
         fetchGeneralExpenses();
         setDate(new Date().toISOString().split('T')[0]);
-        setViewMode('detail'); // Show detail view (which is the form + list) directly
+        setViewMode('list');
     }
 
     const handleSubmitExpense = async (e: React.FormEvent) => {
