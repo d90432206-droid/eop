@@ -1,8 +1,8 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { createLeaveRequest, getLeaveRequests, getCurrentEmployee, getVehicles, getVehicleBookings, updateLeaveStatus, cancelLeaveRequest, checkLeaveOverlap, downloadCSV, getEmployees } from '../services/supabaseService';
 import { Employee, LeaveRequest, LeaveType, Vehicle, VehicleBooking, RequestLog } from '../types';
-import { PlusCircle, Calendar, FileText, Clock, Briefcase, Car, Utensils, AlertCircle, RefreshCw, CheckCircle, History, User, XCircle, Sun, Moon, FileSpreadsheet, Filter, Check, PieChart, BarChart3, ChevronRight, Calculator, Download, AlertTriangle } from 'lucide-react';
+import { PlusCircle, Calendar, FileText, Clock, Briefcase, Car, Utensils, AlertCircle, RefreshCw, CheckCircle, History, User, XCircle, Sun, Moon, FileSpreadsheet, Filter, Check, PieChart, BarChart3, ChevronRight, Calculator, Download, AlertTriangle, Printer } from 'lucide-react';
 
 const LeaveRequestPage: React.FC = () => {
     const [currentEmp, setCurrentEmp] = useState<Employee | null>(null);
