@@ -588,7 +588,7 @@ export const getExpenseClaims = async (leaveRequestId?: number): Promise<Expense
 export const getAllMyExpenseClaims = async (employeeId: string): Promise<ExpenseClaim[]> => {
   const { data, error } = await supabase
     .from('expense_claims')
-    .select('status, description, amount')
+    .select('*')
     .eq('employee_id', employeeId);
 
   if (error) return [];
