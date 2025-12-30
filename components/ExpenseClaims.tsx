@@ -98,7 +98,8 @@ const ExpenseClaims: React.FC = () => {
 
     const handleSubmitExpense = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!currentUserId || !selectedTrip) return;
+        if (!currentUserId) return;
+        if (expenseType === 'trip' && !selectedTrip) return;
 
         try {
             // 1. Create Expense
