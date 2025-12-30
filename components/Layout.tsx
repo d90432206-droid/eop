@@ -105,21 +105,35 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         </div>
 
         {/* Weather & Time Widget */}
-        <div className="px-6 py-5 border-b border-white/20 bg-white/30 backdrop-blur-md shadow-lg">
-          <div className="flex items-center justify-between text-stone-500 mb-1">
-            <div className="flex items-center gap-2 text-sm font-medium">
-              <Clock size={16} className="text-accent" />
-              <span className="font-mono text-stone-600">
-                {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-              </span>
+        {/* Weather & Time Widget - Enhanced */}
+        <div className="relative overflow-hidden p-6 border-b border-white/40 bg-gradient-to-br from-white/40 to-white/10 backdrop-blur-xl shadow-xl group transition-all duration-300 hover:shadow-2xl">
+          {/* Animated Background Blob */}
+          <div className="absolute -top-12 -right-12 w-40 h-40 bg-amber-300/10 rounded-full blur-3xl group-hover:bg-amber-300/20 transition-all duration-1000 animate-pulse"></div>
+
+          <div className="relative z-10">
+            <div className="flex items-start justify-between mb-2">
+              <div className="flex flex-col">
+                <div className="flex items-center gap-2 text-stone-600 mb-1">
+                  <Clock size={14} className="text-accent" />
+                  <span className="font-mono font-bold text-xs tracking-wider opacity-80">
+                    {currentTime.toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit' })}
+                  </span>
+                </div>
+                <div className="text-sm font-bold text-stone-600 tracking-wide">
+                  {currentTime.toLocaleDateString()}
+                </div>
+              </div>
+
+              <div className="flex flex-col items-end">
+                <div className="flex items-center gap-1.5 transition-transform duration-500 group-hover:scale-110 origin-right">
+                  <CloudSun size={32} className="text-amber-500 drop-shadow-sm" />
+                  <span className="text-3xl font-black text-stone-700 tracking-tighter shadow-stone-200 drop-shadow-sm">
+                    {weatherTemp !== null ? Math.round(weatherTemp) : '--'}°
+                  </span>
+                </div>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-stone-400 mt-1">Taipei</span>
+              </div>
             </div>
-            <div className="flex items-center gap-1 text-sm font-medium">
-              <CloudSun size={16} className="text-amber-500" />
-              <span className="text-stone-600">{weatherTemp !== null ? `${weatherTemp}°C` : '--'}</span>
-            </div>
-          </div>
-          <div className="text-xs text-stone-400 font-medium pl-6">
-            {currentTime.toLocaleDateString()} (Taipei)
           </div>
         </div>
 

@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { createExpenseClaim, getExpenseClaims, getCurrentUser, getMyBusinessTrips, getCurrentEmployee, updateExpenseStatus, createVehicleLog, getVehicles, getVehicleBookings, updateVehicleMileage, submitExpenseClaim, getAllMyExpenseClaims } from '../services/supabaseService';
+import { createExpenseClaim, getExpenseClaims, getCurrentUser, getMyBusinessTrips, getCurrentEmployee, updateExpenseStatus, createVehicleLog, getVehicles, getVehicleBookings, updateVehicleMileage, submitExpenseClaim, getAllMyExpenseClaims, createGeneralVoucher, getMyGeneralVouchers } from '../services/supabaseService';
 import { ExpenseClaim, LeaveRequest, Employee, Vehicle, VehicleBooking } from '../types';
 import { Receipt, Globe, Plus, Utensils, BedDouble, Briefcase, CalendarClock, Info, Printer, ArrowRightCircle, CheckCircle, Trash2, Fuel, ChevronLeft, Download, FileText, ChevronRight, Send, Filter, Search } from 'lucide-react';
 
@@ -9,6 +9,9 @@ const ExpenseClaims: React.FC = () => {
     const [selectedTrip, setSelectedTrip] = useState<LeaveRequest | null>(null);
     const [tripExpenses, setTripExpenses] = useState<ExpenseClaim[]>([]);
     const [myTrips, setMyTrips] = useState<LeaveRequest[]>([]);
+    const [generalVouchers, setGeneralVouchers] = useState<LeaveRequest[]>([]); // New State
+
+    // Unused? Maybe cleanup later.
     const [allMyExpenses, setAllMyExpenses] = useState<ExpenseClaim[]>([]);
 
     const [currentUserId, setCurrentUserId] = useState<string | null>(null);
@@ -46,7 +49,11 @@ const ExpenseClaims: React.FC = () => {
                 const trips = await getMyBusinessTrips(user.id);
                 setMyTrips(trips);
 
-                // Fetch all expenses for status calculation
+                // Fetch General Vouchers
+                const vouchers = await getMyGeneralVouchers(user.id);
+                setGeneralVouchers(vouchers);
+
+                // Fetch all expenses (backup/legacy)
                 const allExp = await getAllMyExpenseClaims(user.id);
                 setAllMyExpenses(allExp);
             }
@@ -196,58 +203,27 @@ const ExpenseClaims: React.FC = () => {
     }
 
     const handleSubmitAll = async () => {
-        if (!selectedTrip && expenseType !== 'general') return;
+        if (!selectedTrip) return;
         if (!confirm("確定要送出這些費用進行審核嗎？送出後將無法修改。")) return;
 
         try {
-            if (expenseType === 'trip' && selectedTrip) {
-                await submitExpenseClaim(selectedTrip.id);
-                await fetchTripExpenses(selectedTrip.id);
-            } else {
-                // General Expenses: Batch Update to 'pending_dept'
-                const pendingItems = tripExpenses.filter(e => e.status === 'pending');
-                if (pendingItems.length === 0) {
-                    alert('沒有待審核的項目');
-                    return;
-                }
-                // Filter out any items that might not have a valid ID (though they should)
-                // Fix: ID can be string or number depending on DB driver/JSON
-                const itemsToSubmit = pendingItems.filter(e => e.id !== undefined && e.id !== null);
-                if (itemsToSubmit.length === 0) {
-                    alert('沒有有效的待審核項目 (ID Error)');
-                    return;
-                }
-                await Promise.all(itemsToSubmit.map(e => updateExpenseStatus(e.id, 'pending_dept')));
+            await submitExpenseClaim(selectedTrip.id);
+            await fetchTripExpenses(selectedTrip.id);
 
-                // Refresh data manually to ensure consistency and prevent stale state
-                if (currentUserId) {
-                    const latestExpenses = await getAllMyExpenseClaims(currentUserId);
-                    setAllMyExpenses(latestExpenses);
-                    // Update TripExpenses directly from the fresh data
-                    const general = latestExpenses.filter(e => !e.description?.startsWith('[TRIP-'));
-                    setTripExpenses(general);
-                }
+            // Refresh Voucher List if needed
+            if (expenseType === 'general' && currentUserId) {
+                const vouchers = await getMyGeneralVouchers(currentUserId);
+                setGeneralVouchers(vouchers);
             }
-            alert("✅ 費用申請已送出至總務部門！");
+
+            alert("✅ 費用申請已送出！");
         } catch (e: any) {
             alert(e.message);
         }
     };
 
     const getTripStatus = (tripId: number) => {
-        // General Expense Logic
-        if (expenseType === 'general') {
-            // For general, we check the displayed expenses (tripExpenses)
-            if (!tripExpenses || !Array.isArray(tripExpenses)) return { label: '一般報銷', color: 'bg-stone-100 text-stone-500' };
-            const statuses = tripExpenses.map(e => e.status);
-            if (statuses.length === 0) return { label: '一般報銷', color: 'bg-stone-100 text-stone-500' };
-
-            if (statuses.some(s => s === 'returned' || s === 'rejected')) return { label: '退回/拒絕', color: 'bg-rose-100 text-rose-600' };
-            if (statuses.some(s => s === 'pending_dept' || s === 'pending_gm')) return { label: '核准中', color: 'bg-blue-100 text-blue-600' };
-            if (statuses.every(s => s === 'approved')) return { label: '核銷完成', color: 'bg-emerald-100 text-emerald-600' };
-            return { label: '填寫中', color: 'bg-amber-100 text-amber-600' };
-        }
-
+        // Unified Logic: Both Trips and Vouchers use [TRIP-ID] tag mechanism
         const tripTag = `[TRIP-${tripId}]`;
         const expenses = allMyExpenses.filter(e => e.description && e.description.includes(tripTag));
 
@@ -259,9 +235,9 @@ const ExpenseClaims: React.FC = () => {
         if (statuses.some(s => s === 'returned' || s === 'rejected')) return { label: '退回/拒絕', color: 'bg-rose-100 text-rose-600' };
         if (statuses.some(s => s === 'pending_dept' || s === 'pending_gm')) return { label: '核准中', color: 'bg-blue-100 text-blue-600' };
         if (statuses.every(s => s === 'approved')) return { label: '核銷完成', color: 'bg-emerald-100 text-emerald-600' };
-        if (statuses.every(s => s === 'pending')) return { label: '未申請', color: 'bg-stone-100 text-stone-500' }; // Draft is technically not applied yet
+        if (statuses.every(s => s === 'pending')) return { label: '未申請', color: 'bg-stone-100 text-stone-500' };
 
-        return { label: '處理中', color: 'bg-amber-100 text-amber-600' }; // Mixed states fallback
+        return { label: '處理中', color: 'bg-amber-100 text-amber-600' };
     };
 
     const handlePrint = () => {
@@ -303,8 +279,21 @@ const ExpenseClaims: React.FC = () => {
         return (tripStart < filterE && tripEnd > filterS);
     });
 
+    const handleCreateGeneralVoucher = async () => {
+        if (!currentEmp) return;
+        try {
+            const newVoucher = await createGeneralVoucher(currentEmp.id);
+            if (newVoucher) {
+                setGeneralVouchers([newVoucher, ...generalVouchers]);
+                handleSelectTrip(newVoucher);
+            }
+        } catch (e) { console.error(e); }
+    }
+
     // -- RENDER: List View --
     if (viewMode === 'list') {
+        const showList = expenseType === 'trip' ? filteredTrips : generalVouchers; // Filter generic for general logic later if needed
+
         return (
             <div className="space-y-6">
                 <div className="flex justify-between items-center mb-6">
@@ -326,15 +315,59 @@ const ExpenseClaims: React.FC = () => {
                 </div>
 
                 {expenseType === 'general' && (
-                    <div className="bg-white p-12 text-center rounded-2xl border border-stone-200">
-                        <div className="mb-4 text-stone-300">
-                            <FileText size={48} className="mx-auto" />
+                    <div className="space-y-6">
+                        <div className="flex justify-between items-center bg-stone-50 p-6 rounded-2xl border border-stone-200">
+                            <div>
+                                <h3 className="font-bold text-stone-800 text-lg">一般費用憑單 (General Vouchers)</h3>
+                                <p className="text-stone-500 text-sm mt-1">建立新的憑單以申請雜支、交際費或公務車費用，一張憑單可包含多筆明細。</p>
+                            </div>
+                            <button onClick={handleCreateGeneralVoucher} className="bg-stone-800 text-white px-6 py-3 rounded-xl font-bold hover:bg-stone-700 shadow-md transition-all flex items-center gap-2">
+                                <Plus size={18} /> 新增憑單
+                            </button>
                         </div>
-                        <h3 className="text-lg font-bold text-stone-800 mb-2">一般費用申請 (支出憑單)</h3>
-                        <p className="text-stone-500 mb-6">適用於非出差期間的雜支、交際費、公務車加油等費用。</p>
-                        <button onClick={switchToGeneral} className="bg-accent text-stone-900 px-6 py-3 rounded-xl font-bold hover:bg-accent-light shadow-lg hover:shadow-xl transition-all">
-                            開始申請
-                        </button>
+
+                        <div className="bg-white border border-stone-200 rounded-2xl overflow-hidden shadow-sm">
+                            <table className="w-full text-left border-collapse">
+                                <thead className="bg-stone-50 border-b border-stone-200">
+                                    <tr>
+                                        <th className="p-4 text-xs font-bold text-stone-500 uppercase">憑單單號</th>
+                                        <th className="p-4 text-xs font-bold text-stone-500 uppercase">建立日期</th>
+                                        <th className="p-4 text-xs font-bold text-stone-500 uppercase">狀態</th>
+                                        <th className="p-4 text-xs font-bold text-stone-500 uppercase">說明</th>
+                                        <th className="p-4 text-xs font-bold text-stone-500 uppercase text-right">操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-stone-100">
+                                    {generalVouchers.length === 0 ? (
+                                        <tr><td colSpan={5} className="p-12 text-center text-stone-400">尚未建立任何一般費用憑單</td></tr>
+                                    ) : (
+                                        generalVouchers.map(voucher => (
+                                            <tr key={voucher.id} onClick={() => handleSelectTrip(voucher)} className="hover:bg-stone-50 cursor-pointer transition-colors group">
+                                                <td className="p-4 font-mono font-bold text-stone-800">#{voucher.id}</td>
+                                                <td className="p-4 text-sm text-stone-600">{new Date(voucher.created_at || '').toLocaleDateString()}</td>
+                                                <td className="p-4">
+                                                    {(() => {
+                                                        const status = getTripStatus(voucher.id); // Reusing logic
+                                                        // Override label for clarity? No, status codes are same.
+                                                        // Just ensure 'business' status is used correctly.
+                                                        // If it's a 'pending' general voucher, show '草稿' or '未送出'?
+                                                        const label = voucher.status === 'pending' ? '草稿 / 未送出' : status.label;
+                                                        const color = voucher.status === 'pending' ? 'bg-stone-100 text-stone-600' : status.color;
+                                                        return <span className={`px-2 py-1 rounded text-xs font-bold ${color}`}>{label}</span>;
+                                                    })()}
+                                                </td>
+                                                <td className="p-4 text-sm text-stone-600">{voucher.reason}</td>
+                                                <td className="p-4 text-right">
+                                                    <button className="text-sm font-bold text-accent hover:text-accent-dark flex items-center justify-end gap-1 px-3 py-1.5 rounded-lg border border-transparent hover:bg-white hover:border-stone-200 transition-all">
+                                                        查看明細 <ArrowRightCircle size={16} />
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        ))
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 )}
 

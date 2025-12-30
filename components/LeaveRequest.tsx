@@ -1153,7 +1153,7 @@ const LeaveRequestPage: React.FC = () => {
                             </div>
                         </div>
 
-                        <div className="bg-white rounded-2xl shadow-sm border border-stone-200 overflow-hidden">
+                        <div className="bg-white shadow-sm border border-stone-200">
                             <div className="overflow-x-auto">
                                 <table className="min-w-full divide-y divide-stone-200">
                                     <thead className="bg-stone-50 border-b border-stone-200">
@@ -1258,10 +1258,10 @@ const LeaveRequestPage: React.FC = () => {
                                         <tr>
                                             <th>起</th>
                                             <th>訖</th>
-                                            <th>起</th>
-                                            <th>訖</th>
-                                            <th>單項</th>
-                                            <th>總計</th>
+                                            <th className="w-20">起</th>
+                                            <th className="w-20">訖</th>
+                                            <th className="w-24">單項</th>
+                                            <th className="w-24">總計</th>
                                         </tr>
                                     </thead>
                                     <tbody>

@@ -388,6 +388,45 @@ export const cancelLeaveRequest = async (id: number, employeeName: string): Prom
   await updateLeaveStatus(id, 'cancelled', newLog);
 };
 
+// --- General Expense Vouchers (Reusing LeaveRequest) ---
+
+export const createGeneralVoucher = async (employeeId: string, customDate?: string): Promise<LeaveRequest | null> => {
+  const dateStr = customDate || new Date().toISOString().split('T')[0];
+  const reason = `[GENERAL] 一般費用憑單 ${dateStr}`; // Tag for filtering
+
+  // Use 'business' type but dummy times
+  const { data, error } = await supabase
+    .from('leave_requests')
+    .insert([{
+      employee_id: employeeId,
+      leave_type: 'business',
+      start_time: `${dateStr}T09:00:00`,
+      end_time: `${dateStr}T18:00:00`,
+      reason: reason,
+      status: 'pending' // Draft state
+    }])
+    .select()
+    .single();
+
+  if (error) {
+    handleError(error);
+    return null;
+  }
+  return data as LeaveRequest;
+};
+
+export const getMyGeneralVouchers = async (employeeId: string): Promise<LeaveRequest[]> => {
+  const { data, error } = await supabase
+    .from('leave_requests')
+    .select('*')
+    .eq('employee_id', employeeId)
+    .ilike('reason', '[GENERAL]%') // Filter by tag
+    .order('created_at', { ascending: false });
+
+  if (error) return [];
+  return data as LeaveRequest[];
+};
+
 export const getMyBusinessTrips = async (employeeId: string): Promise<LeaveRequest[]> => {
   const { data, error } = await supabase
     .from('leave_requests')
@@ -395,6 +434,7 @@ export const getMyBusinessTrips = async (employeeId: string): Promise<LeaveReque
     .eq('employee_id', employeeId)
     .eq('leave_type', 'business')
     .eq('status', 'approved') // Only approved trips can have expenses
+    .not('reason', 'ilike', '[GENERAL]%') // Exclude General Vouchers
     .order('start_time', { ascending: false });
 
   if (error) return [];
