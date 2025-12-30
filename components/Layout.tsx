@@ -65,6 +65,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     { name: '車輛', path: '/vehicles', icon: Car },
     { name: '報銷', path: '/expenses', icon: Receipt },
     { name: '訪客', path: '/visitors', icon: Users },
+    { name: '資產', path: '/assets', icon: Package },
   ];
 
   if (currentUser?.role === 'admin') {

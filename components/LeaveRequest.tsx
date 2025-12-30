@@ -12,6 +12,11 @@ const LeaveRequestPage: React.FC = () => {
     const [loading, setLoading] = useState(false);
     const [empLoading, setEmpLoading] = useState(true);
 
+    const LUNCH_START_HOUR = 12;
+    const LUNCH_START_MIN = 15;
+    const LUNCH_END_HOUR = 13;
+    const LUNCH_END_MIN = 15;
+
     // Tab State
     const [activeTab, setActiveTab] = useState<'form' | 'stats'>('form');
 
@@ -116,11 +121,47 @@ const LeaveRequestPage: React.FC = () => {
     const handleQuickTimeSelect = (type: 'am' | 'pm') => {
         if (type === 'am') {
             setStartTime('08:00');
-            setEndTime('12:00');
+            setEndTime('12:15');
         } else {
-            setStartTime('13:00');
-            setEndTime('17:30'); // Standard end time
+            setStartTime('13:15');
+            setEndTime('17:30');
         }
+    };
+
+    const handleDurationSelect = (hours: number) => {
+        if (!startTime) return;
+        const [hStr, mStr] = startTime.split(':');
+        const startH = parseInt(hStr);
+        const startM = parseInt(mStr);
+
+        let currentH = startH;
+        let currentM = startM;
+        let remainingMinutes = hours * 60;
+
+        while (remainingMinutes > 0) {
+            // Check if current time is inside lunch break (12:15 - 13:15)
+            const currentTimeVal = currentH * 60 + currentM;
+            const lunchStartVal = LUNCH_START_HOUR * 60 + LUNCH_START_MIN; // 735
+            const lunchEndVal = LUNCH_END_HOUR * 60 + LUNCH_END_MIN;     // 795
+
+            // If we are EXACTLY at lunch start or inside lunch block, jump to lunch end
+            if (currentTimeVal >= lunchStartVal && currentTimeVal < lunchEndVal) {
+                currentH = LUNCH_END_HOUR;
+                currentM = LUNCH_END_MIN;
+                continue;
+            }
+
+            // Move forward by 15 mins block
+            currentM += 15;
+            if (currentM >= 60) {
+                currentH += 1;
+                currentM = 0;
+            }
+            remainingMinutes -= 15;
+        }
+
+        const pad = (n: number) => n.toString().padStart(2, '0');
+        setEndTime(`${pad(currentH)}:${pad(currentM)}`);
     };
 
     const handlePrint = (req: LeaveRequest) => {
@@ -798,11 +839,20 @@ const LeaveRequestPage: React.FC = () => {
                                         </select>
                                     </div>
                                     {/* Quick Selection for AM/PM */}
-                                    {(leaveType === 'annual' || leaveType === 'other') && (
+                                    {leaveType === 'annual' || leaveType === 'sick' ? (
                                         <div className="flex gap-2 mt-2">
-                                            <button type="button" onClick={() => handleQuickTimeSelect('am')} className="flex-1 py-1.5 bg-stone-50 border border-stone-200 rounded-lg text-xs font-bold text-stone-600 hover:bg-stone-100">上午 (08:00-12:00)</button>
-                                            <button type="button" onClick={() => handleQuickTimeSelect('pm')} className="flex-1 py-1.5 bg-stone-50 border border-stone-200 rounded-lg text-xs font-bold text-stone-600 hover:bg-stone-100">下午 (13:00-17:30)</button>
+                                            <button type="button" onClick={() => handleQuickTimeSelect('am')} className="flex-1 py-1.5 bg-stone-50 border border-stone-200 rounded-lg text-xs font-bold text-stone-600 hover:bg-stone-100">上午 (08:00-12:15)</button>
+                                            <button type="button" onClick={() => handleQuickTimeSelect('pm')} className="flex-1 py-1.5 bg-stone-50 border border-stone-200 rounded-lg text-xs font-bold text-stone-600 hover:bg-stone-100">下午 (13:15-17:30)</button>
                                         </div>
+                                    ) : leaveType === 'other' ? (
+                                        <div className="flex gap-2 mt-2 flex-wrap">
+                                            {[2, 4, 6, 8].map(h => (
+                                                <button key={h} type="button" onClick={() => handleDurationSelect(h)} className="flex-1 min-w-[60px] py-1.5 bg-stone-50 border border-stone-200 rounded-lg text-xs font-bold text-stone-600 hover:bg-stone-100">{h}小時</button>
+                                            ))}
+                                        </div>
+                                    ) : null}
+                                    {(leaveType === 'annual' || leaveType === 'other') && false && ( // Deprecated old block
+                                        <div />
                                     )}
                                 </div>
                             )}
@@ -1188,10 +1238,10 @@ const LeaveRequestPage: React.FC = () => {
                                     </tbody>
                                 </table>
 
-                                <div className="mt-8 flex justify-between text-lg px-8">
-                                    <div>部門主管: ________________</div>
-                                    <div>單位主管: ________________</div>
-                                    <div>人事查核: ________________</div>
+                                <div className="mt-16 flex justify-between text-lg px-8 pb-10">
+                                    <div className="border-b-2 border-dashed border-stone-300 w-1/4 pb-2">部門主管:</div>
+                                    <div className="border-b-2 border-dashed border-stone-300 w-1/4 pb-2">單位主管:</div>
+                                    <div className="border-b-2 border-dashed border-stone-300 w-1/4 pb-2">人事查核:</div>
                                 </div>
                             </div>
                         )}

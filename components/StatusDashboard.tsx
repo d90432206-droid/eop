@@ -107,14 +107,12 @@ const StatusDashboard: React.FC = () => {
 
             let finalEmployees = data;
 
-            // Only on initial load, perform synchronization check
-            if (isInitialLoad) {
-                const updated = await syncStatusWithAttendance(data, leaves);
-                if (updated) {
-                    // If we updated DB, re-fetch to get clean state
-                    const refreshedData = await getEmployees();
-                    finalEmployees = refreshedData;
-                }
+            // Perform synchronization check on every fetch to ensure live status
+            const updated = await syncStatusWithAttendance(data, leaves);
+            if (updated) {
+                // If we updated DB, re-fetch to get clean state
+                const refreshedData = await getEmployees();
+                finalEmployees = refreshedData;
             }
 
             setEmployees(finalEmployees);
