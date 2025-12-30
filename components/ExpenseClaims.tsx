@@ -218,14 +218,15 @@ const ExpenseClaims: React.FC = () => {
                     return;
                 }
                 await Promise.all(itemsToSubmit.map(e => updateExpenseStatus(e.id, 'pending_dept')));
-                await refreshData();
-                fetchGeneralExpenses(); // Refresh local list
-            }
 
-            // Refresh global status
-            if (currentUserId) {
-                const allExp = await getAllMyExpenseClaims(currentUserId);
-                setAllMyExpenses(allExp);
+                // Refresh data manually to ensure consistency and prevent stale state
+                if (currentUserId) {
+                    const latestExpenses = await getAllMyExpenseClaims(currentUserId);
+                    setAllMyExpenses(latestExpenses);
+                    // Update TripExpenses directly from the fresh data
+                    const general = latestExpenses.filter(e => !e.description?.startsWith('[TRIP-'));
+                    setTripExpenses(general);
+                }
             }
             alert("✅ 費用申請已送出至總務部門！");
         } catch (e: any) {

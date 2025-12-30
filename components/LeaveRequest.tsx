@@ -1265,20 +1265,20 @@ const LeaveRequestPage: React.FC = () => {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <tr className="h-16">
-                                            <td>{printingRequest.employees?.full_name}</td>
-                                            <td>{new Date(printingRequest.start_time).toLocaleDateString('zh-TW', { month: 'numeric', day: 'numeric' })}</td>
-                                            <td>{new Date(printingRequest.start_time).toLocaleTimeString('zh-TW', { hour12: false, hour: '2-digit', minute: '2-digit' })}</td>
-                                            <td>{new Date(printingRequest.end_time).toLocaleTimeString('zh-TW', { hour12: false, hour: '2-digit', minute: '2-digit' })}</td>
-                                            <td className="text-left align-top p-2">{printingRequest.reason}</td>
-                                            {/* Actual time is usually same as planned for form unless filled later. We leave blank or fill same? Reference image has it blank. Let's fill it. */}
-                                            <td>{new Date(printingRequest.start_time).toLocaleTimeString('zh-TW', { hour12: false, hour: '2-digit', minute: '2-digit' })}</td>
-                                            <td>{new Date(printingRequest.end_time).toLocaleTimeString('zh-TW', { hour12: false, hour: '2-digit', minute: '2-digit' })}</td>
-                                            <td>{printingRequest.meal_allowance ? '$50(誤餐)' : '-'}</td>
-                                            <td>{printingRequest.meal_allowance ? '$50' : '-'}</td>
+                                        <tr className="h-32">
+                                            <td className="text-center">{printingRequest.employees?.full_name}</td>
+                                            <td className="text-center">{new Date(printingRequest.start_time).toLocaleDateString('zh-TW', { month: 'numeric', day: 'numeric' })}</td>
+                                            <td className="text-center">{new Date(printingRequest.start_time).toLocaleTimeString('zh-TW', { hour12: false, hour: '2-digit', minute: '2-digit' })}</td>
+                                            <td className="text-center">{new Date(printingRequest.end_time).toLocaleTimeString('zh-TW', { hour12: false, hour: '2-digit', minute: '2-digit' })}</td>
+                                            <td className="text-left align-top p-4">{printingRequest.reason}</td>
+                                            {/* Actual time and amounts left blank for manual entry as requested */}
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
                                         </tr>
                                         {/* Empty rows to mimic form */}
-                                        <tr className="h-16">
+                                        <tr className="h-32">
                                             <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
                                         </tr>
                                     </tbody>
