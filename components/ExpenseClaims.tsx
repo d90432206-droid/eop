@@ -544,7 +544,20 @@ const ExpenseClaims: React.FC = () => {
                                                     <span className="font-mono font-bold text-stone-800">{exp.currency} {exp.amount.toLocaleString()}</span>
                                                     {exp.status !== 'cancelled' && (() => {
                                                         const status = expenseType === 'trip' && selectedTrip ? getTripStatus(selectedTrip.id) : getTripStatus(0);
-                                                        const isLocked = (status.label === '核准中' || status.label === '核銷完成');
+
+                                                        // Lock Logic:
+                                                        // 1. If Trip: Lock if whole trip is Approved/In Progress.
+                                                        // 2. If General: Lock only if THIS item is Approved. Allow deleting 'pending' (drafts) or 'returned'.
+                                                        let isLocked = false;
+                                                        if (expenseType === 'trip') {
+                                                            isLocked = (status.label === '核准中' || status.label === '核銷完成');
+                                                        } else {
+                                                            // General: Only lock if this specific item is passed the drafting stage
+                                                            if (exp.status === 'pending_dept' || exp.status === 'pending_gm' || exp.status === 'approved') {
+                                                                isLocked = true;
+                                                            }
+                                                        }
+
                                                         return !isLocked && (
                                                             <button onClick={() => handleDeleteExpense(exp.id)} className="text-rose-300 hover:text-rose-500 p-1"><Trash2 size={16} /></button>
                                                         );
