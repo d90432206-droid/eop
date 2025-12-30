@@ -585,7 +585,7 @@ const ExpenseClaims: React.FC = () => {
                                             )}
 
                                             {/* General Expense History (Submitted) */}
-                                            {expenseType === 'general' && history.length > 0 && (
+                                            {expenseType === 'general' && history?.length > 0 && (
                                                 <div className="border-t border-stone-100 pt-4">
                                                     <h4 className="text-xs font-bold text-stone-400 mb-3 uppercase tracking-wider">已送出 / 歷史紀錄</h4>
                                                     <div className="space-y-2 opacity-75">
@@ -595,14 +595,14 @@ const ExpenseClaims: React.FC = () => {
                                                                     <div className="p-1.5 bg-white rounded text-stone-400">{getCategoryIcon(exp.category)}</div>
                                                                     <div>
                                                                         <div className="font-bold text-stone-600 text-xs">{exp.description}</div>
-                                                                        <div className="text-[10px] text-stone-400">{getTripStatus(0) /* Reuse logic or show badge */}
-                                                                            <span className={`ml-2 px-1.5 py-0.5 rounded text-[10px] ${exp.status === 'approved' ? 'bg-emerald-100 text-emerald-600' : 'bg-blue-50 text-blue-500'}`}>
-                                                                                {exp.status}
+                                                                        <div className="text-[10px] text-stone-400">
+                                                                            <span className={`px-1.5 py-0.5 rounded text-[10px] ${exp.status === 'approved' ? 'bg-emerald-100 text-emerald-600' : 'bg-blue-50 text-blue-500'}`}>
+                                                                                {exp.status === 'pending_dept' ? '部門審核中' : exp.status === 'pending_gm' ? '總經理審核中' : exp.status === 'approved' ? '已核准' : exp.status}
                                                                             </span>
                                                                         </div>
                                                                     </div>
                                                                 </div>
-                                                                <span className="font-mono text-xs font-bold text-stone-500">{exp.currency} {exp.amount.toLocaleString()}</span>
+                                                                <span className="font-mono text-xs font-bold text-stone-500">{exp.currency} {exp.amount?.toLocaleString()}</span>
                                                             </div>
                                                         ))}
                                                     </div>
@@ -678,7 +678,7 @@ const ExpenseClaims: React.FC = () => {
                                     <td className="border border-black p-2 text-center">{exp.claim_date}</td>
                                     <td className="border border-black p-2 text-center">{exp.category === 'Travel' ? '交通' : exp.category === 'Meal' ? '誤餐' : exp.category === 'Fuel' ? '加油' : exp.category}</td>
                                     <td className="border border-black p-2">{exp.description}</td>
-                                    <td className="border border-black p-2 text-right font-mono">{exp.amount.toLocaleString()}</td>
+                                    <td className="border border-black p-2 text-right font-mono">{exp.amount?.toLocaleString()}</td>
                                 </tr>
                             ))}
                             {tripExpenses.length === 0 && (
