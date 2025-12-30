@@ -380,176 +380,174 @@ const ExpenseClaims: React.FC = () => {
                             </table>
                         </div>
                     </div>
-                  </div>
+                )}
+            </div>
         )
     }
-            </div >
-        )
-    }
 
-// -- RENDER: Detail View --
-return (
-    <div className="space-y-6">
-        <button onClick={() => setViewMode('list')} className="flex items-center gap-1 text-stone-500 hover:text-stone-800 font-bold transition-colors">
-            <ChevronLeft size={20} /> 返回列表
-        </button>
+    // -- RENDER: Detail View --
+    return (
+        <div className="space-y-6">
+            <button onClick={() => setViewMode('list')} className="flex items-center gap-1 text-stone-500 hover:text-stone-800 font-bold transition-colors">
+                <ChevronLeft size={20} /> 返回列表
+            </button>
 
-        {selectedTrip && (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {selectedTrip && (
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
-                {/* Left: Trip Info & Form */}
-                <div className="lg:col-span-1 space-y-6">
-                    <div className="bg-white p-6 rounded-2xl shadow-sm border border-stone-200">
-                        <h3 className="font-bold text-lg text-stone-800 mb-4 flex items-center gap-2">
-                            <Info size={20} className="text-accent" /> 出差資訊
-                        </h3>
-                        <div className="space-y-3 text-sm">
-                            {expenseType === 'trip' && selectedTrip ? (
-                                <>
-                                    <div><span className="text-stone-500 block text-xs uppercase font-bold">單號</span> <span className="font-mono font-bold text-stone-800">#{selectedTrip.id}</span></div>
-                                    <div><span className="text-stone-500 block text-xs uppercase font-bold">申請人</span> <span className="font-bold text-stone-800">{(selectedTrip.employees as any)?.full_name}</span></div>
-                                    <div><span className="text-stone-500 block text-xs uppercase font-bold">日期</span> <span className="font-bold text-stone-800">{new Date(selectedTrip.start_time).toLocaleDateString()} ~ {new Date(selectedTrip.end_time).toLocaleDateString()}</span></div>
-                                    <div><span className="text-stone-500 block text-xs uppercase font-bold">事由</span> <span className="font-bold text-stone-800">{selectedTrip.reason}</span></div>
-                                </>
-                            ) : (
-                                <>
-                                    <div><span className="text-stone-500 block text-xs uppercase font-bold">類型</span> <span className="font-bold text-stone-800">一般費用 (支出憑單)</span></div>
-                                    <div><span className="text-stone-500 block text-xs uppercase font-bold">操作人</span> <span className="font-bold text-stone-800">{currentEmp?.full_name}</span></div>
-                                    <div className="p-3 bg-blue-50 text-blue-700 rounded-lg text-xs mt-2">
-                                        此模式無需關聯出差單，可單筆申請雜支或公務車費用。
-                                    </div>
-                                </>
-                            )}
+                    {/* Left: Trip Info & Form */}
+                    <div className="lg:col-span-1 space-y-6">
+                        <div className="bg-white p-6 rounded-2xl shadow-sm border border-stone-200">
+                            <h3 className="font-bold text-lg text-stone-800 mb-4 flex items-center gap-2">
+                                <Info size={20} className="text-accent" /> 出差資訊
+                            </h3>
+                            <div className="space-y-3 text-sm">
+                                {expenseType === 'trip' && selectedTrip ? (
+                                    <>
+                                        <div><span className="text-stone-500 block text-xs uppercase font-bold">單號</span> <span className="font-mono font-bold text-stone-800">#{selectedTrip.id}</span></div>
+                                        <div><span className="text-stone-500 block text-xs uppercase font-bold">申請人</span> <span className="font-bold text-stone-800">{(selectedTrip.employees as any)?.full_name}</span></div>
+                                        <div><span className="text-stone-500 block text-xs uppercase font-bold">日期</span> <span className="font-bold text-stone-800">{new Date(selectedTrip.start_time).toLocaleDateString()} ~ {new Date(selectedTrip.end_time).toLocaleDateString()}</span></div>
+                                        <div><span className="text-stone-500 block text-xs uppercase font-bold">事由</span> <span className="font-bold text-stone-800">{selectedTrip.reason}</span></div>
+                                    </>
+                                ) : (
+                                    <>
+                                        <div><span className="text-stone-500 block text-xs uppercase font-bold">類型</span> <span className="font-bold text-stone-800">一般費用 (支出憑單)</span></div>
+                                        <div><span className="text-stone-500 block text-xs uppercase font-bold">操作人</span> <span className="font-bold text-stone-800">{currentEmp?.full_name}</span></div>
+                                        <div className="p-3 bg-blue-50 text-blue-700 rounded-lg text-xs mt-2">
+                                            此模式無需關聯出差單，可單筆申請雜支或公務車費用。
+                                        </div>
+                                    </>
+                                )}
+                            </div>
                         </div>
-                    </div>
 
-                    <div className="bg-stone-50 p-6 rounded-2xl border border-stone-200">
-                        <h3 className="font-bold text-stone-800 mb-4 flex items-center gap-2">
-                            <Plus size={20} className="text-accent" /> 新增費用
-                        </h3>
-                        {(() => {
-                            const status = expenseType === 'trip' && selectedTrip ? getTripStatus(selectedTrip.id) : { label: '一般', color: '' };
-                            const isLocked = expenseType === 'trip' && (status.label === '核准中' || status.label === '核銷完成');
+                        <div className="bg-stone-50 p-6 rounded-2xl border border-stone-200">
+                            <h3 className="font-bold text-stone-800 mb-4 flex items-center gap-2">
+                                <Plus size={20} className="text-accent" /> 新增費用
+                            </h3>
+                            {(() => {
+                                const status = expenseType === 'trip' && selectedTrip ? getTripStatus(selectedTrip.id) : { label: '一般', color: '' };
+                                const isLocked = expenseType === 'trip' && (status.label === '核准中' || status.label === '核銷完成');
 
-                            return (
-                                <form onSubmit={handleSubmitExpense} className="space-y-4">
-                                    {isLocked && (
-                                        <div className="bg-amber-50 text-amber-600 p-3 rounded-lg text-sm font-bold border border-amber-200 mb-2">
-                                            🔒 此單據{status.label}，無法新增或修改費用。
-                                        </div>
-                                    )}
-                                    <fieldset disabled={isLocked} className="space-y-4 disabled:opacity-50">
-                                        <div><label className="block text-xs font-bold text-stone-500 mb-1">日期</label><input required type="date" value={date} onChange={e => setDate(e.target.value)} className="w-full p-2 border border-stone-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-accent/50 outline-none" /></div>
-                                        <div>
-                                            <label className="block text-xs font-bold text-stone-500 mb-1">類別</label>
-                                            <select value={category} onChange={e => setCategory(e.target.value)} className="w-full p-2 border border-stone-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-accent/50 outline-none">
-                                                <option value="Travel">交通費</option>
-                                                <option value="Meal">誤餐費</option>
-                                                <option value="Accommodation">住宿費</option>
-                                                <option value="Fuel">公務車加油</option>
-                                                <option value="Office Supplies">雜支</option>
-                                                <option value="Entertainment">交際費</option>
-                                            </select>
-                                        </div>
-                                        {category === 'Fuel' && (
-                                            <div className="bg-amber-100 p-3 rounded-lg border border-amber-200 space-y-2">
-                                                <div><label className="block text-xs font-bold text-amber-800">車輛</label>
-                                                    <select required value={selectedVehicle} onChange={e => {
-                                                        setSelectedVehicle(e.target.value);
-                                                        // Auto fill desc
-                                                        const v = vehicles.find(veh => veh.id.toString() === e.target.value);
-                                                        if (v) setDescription(`Vehicle ${v.plate_number} Refuel`);
-                                                    }} className="w-full p-1.5 border border-amber-300 rounded text-sm"><option value="">- 請選擇 -</option>{vehicles.map(v => <option key={v.id} value={v.id}>{v.name} ({v.plate_number})</option>)}</select>
-                                                </div>
-                                                <div><label className="block text-xs font-bold text-amber-800">當前里程 (km)</label><input required type="number" value={mileage} onChange={e => setMileage(e.target.value)} className="w-full p-1.5 border border-amber-300 rounded text-sm" /></div>
+                                return (
+                                    <form onSubmit={handleSubmitExpense} className="space-y-4">
+                                        {isLocked && (
+                                            <div className="bg-amber-50 text-amber-600 p-3 rounded-lg text-sm font-bold border border-amber-200 mb-2">
+                                                🔒 此單據{status.label}，無法新增或修改費用。
                                             </div>
                                         )}
-                                        <div>
-                                            <label className="block text-xs font-bold text-stone-500 mb-1">說明</label>
-                                            <input required type="text" value={description} onChange={e => setDescription(e.target.value)} className="w-full p-2 border border-stone-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-accent/50 outline-none" placeholder="例：高鐵台北-高雄" />
-                                        </div>
-                                        <div className="grid grid-cols-3 gap-2">
-                                            <div className="col-span-1">
-                                                <label className="block text-xs font-bold text-stone-500 mb-1">幣別</label>
-                                                <select value={currency} onChange={e => setCurrency(e.target.value)} className="w-full p-2 border border-stone-300 rounded-lg text-sm bg-white"><option value="TWD">TWD</option><option value="USD">USD</option><option value="JPY">JPY</option></select>
+                                        <fieldset disabled={isLocked} className="space-y-4 disabled:opacity-50">
+                                            <div><label className="block text-xs font-bold text-stone-500 mb-1">日期</label><input required type="date" value={date} onChange={e => setDate(e.target.value)} className="w-full p-2 border border-stone-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-accent/50 outline-none" /></div>
+                                            <div>
+                                                <label className="block text-xs font-bold text-stone-500 mb-1">類別</label>
+                                                <select value={category} onChange={e => setCategory(e.target.value)} className="w-full p-2 border border-stone-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-accent/50 outline-none">
+                                                    <option value="Travel">交通費</option>
+                                                    <option value="Meal">誤餐費</option>
+                                                    <option value="Accommodation">住宿費</option>
+                                                    <option value="Fuel">公務車加油</option>
+                                                    <option value="Office Supplies">雜支</option>
+                                                    <option value="Entertainment">交際費</option>
+                                                </select>
                                             </div>
-                                            <div className="col-span-2">
-                                                <label className="block text-xs font-bold text-stone-500 mb-1">金額</label>
-                                                <input required type="number" value={amount} onChange={e => setAmount(e.target.value)} className="w-full p-2 border border-stone-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-accent/50 outline-none" placeholder="0" />
+                                            {category === 'Fuel' && (
+                                                <div className="bg-amber-100 p-3 rounded-lg border border-amber-200 space-y-2">
+                                                    <div><label className="block text-xs font-bold text-amber-800">車輛</label>
+                                                        <select required value={selectedVehicle} onChange={e => {
+                                                            setSelectedVehicle(e.target.value);
+                                                            // Auto fill desc
+                                                            const v = vehicles.find(veh => veh.id.toString() === e.target.value);
+                                                            if (v) setDescription(`Vehicle ${v.plate_number} Refuel`);
+                                                        }} className="w-full p-1.5 border border-amber-300 rounded text-sm"><option value="">- 請選擇 -</option>{vehicles.map(v => <option key={v.id} value={v.id}>{v.name} ({v.plate_number})</option>)}</select>
+                                                    </div>
+                                                    <div><label className="block text-xs font-bold text-amber-800">當前里程 (km)</label><input required type="number" value={mileage} onChange={e => setMileage(e.target.value)} className="w-full p-1.5 border border-amber-300 rounded text-sm" /></div>
+                                                </div>
+                                            )}
+                                            <div>
+                                                <label className="block text-xs font-bold text-stone-500 mb-1">說明</label>
+                                                <input required type="text" value={description} onChange={e => setDescription(e.target.value)} className="w-full p-2 border border-stone-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-accent/50 outline-none" placeholder="例：高鐵台北-高雄" />
                                             </div>
-                                        </div>
-                                        <button type="submit" disabled={isLocked} className="w-full bg-stone-800 text-white py-2.5 rounded-xl font-bold hover:bg-stone-700 shadow-md transition-colors mt-2 disabled:bg-stone-300 disabled:cursor-not-allowed">加入費用</button>
-                                    </fieldset>
-                                </form>
-                            );
-                        })()}
+                                            <div className="grid grid-cols-3 gap-2">
+                                                <div className="col-span-1">
+                                                    <label className="block text-xs font-bold text-stone-500 mb-1">幣別</label>
+                                                    <select value={currency} onChange={e => setCurrency(e.target.value)} className="w-full p-2 border border-stone-300 rounded-lg text-sm bg-white"><option value="TWD">TWD</option><option value="USD">USD</option><option value="JPY">JPY</option></select>
+                                                </div>
+                                                <div className="col-span-2">
+                                                    <label className="block text-xs font-bold text-stone-500 mb-1">金額</label>
+                                                    <input required type="number" value={amount} onChange={e => setAmount(e.target.value)} className="w-full p-2 border border-stone-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-accent/50 outline-none" placeholder="0" />
+                                                </div>
+                                            </div>
+                                            <button type="submit" disabled={isLocked} className="w-full bg-stone-800 text-white py-2.5 rounded-xl font-bold hover:bg-stone-700 shadow-md transition-colors mt-2 disabled:bg-stone-300 disabled:cursor-not-allowed">加入費用</button>
+                                        </fieldset>
+                                    </form>
+                                );
+                            })()}
+                        </div>
                     </div>
-                </div>
 
-                {/* Right: Expenses List & Print Preview */}
-                <div className="lg:col-span-2 flex flex-col h-full">
-                    <div className="bg-white rounded-2xl shadow-sm border border-stone-200 flex flex-col h-full overflow-hidden">
-                        <div className="p-4 border-b border-stone-100 flex justify-between items-center bg-stone-50">
-                            <h3 className="font-bold text-stone-800 flex items-center gap-2">
-                                <FileText size={20} className="text-stone-400" /> 費用明細 ({tripExpenses.length})
-                            </h3>
-                            <button onClick={handlePrint} disabled={tripExpenses.length === 0} className="flex items-center gap-2 bg-white text-stone-700 px-3 py-1.5 rounded-lg border border-stone-300 text-sm font-bold hover:bg-stone-50 disabled:opacity-50">
-                                <Printer size={16} /> 列印
-                            </button>
-                            {tripExpenses.some(e => e.status === 'pending') && expenseType === 'trip' && (
-                                <button onClick={handleSubmitAll} className="flex items-center gap-2 bg-emerald-600 text-white px-3 py-1.5 rounded-lg border border-emerald-700 text-sm font-bold hover:bg-emerald-700 shadow-sm ml-2">
-                                    <Send size={16} /> 送出至總務
+                    {/* Right: Expenses List & Print Preview */}
+                    <div className="lg:col-span-2 flex flex-col h-full">
+                        <div className="bg-white rounded-2xl shadow-sm border border-stone-200 flex flex-col h-full overflow-hidden">
+                            <div className="p-4 border-b border-stone-100 flex justify-between items-center bg-stone-50">
+                                <h3 className="font-bold text-stone-800 flex items-center gap-2">
+                                    <FileText size={20} className="text-stone-400" /> 費用明細 ({tripExpenses.length})
+                                </h3>
+                                <button onClick={handlePrint} disabled={tripExpenses.length === 0} className="flex items-center gap-2 bg-white text-stone-700 px-3 py-1.5 rounded-lg border border-stone-300 text-sm font-bold hover:bg-stone-50 disabled:opacity-50">
+                                    <Printer size={16} /> 列印
                                 </button>
-                            )}
-                        </div>
+                                {tripExpenses.some(e => e.status === 'pending') && expenseType === 'trip' && (
+                                    <button onClick={handleSubmitAll} className="flex items-center gap-2 bg-emerald-600 text-white px-3 py-1.5 rounded-lg border border-emerald-700 text-sm font-bold hover:bg-emerald-700 shadow-sm ml-2">
+                                        <Send size={16} /> 送出至總務
+                                    </button>
+                                )}
+                            </div>
 
-                        {/* UI List View */}
-                        <div className="flex-1 overflow-auto p-4">
-                            {tripExpenses.length === 0 ? (
-                                <div className="text-center text-stone-400 py-12">尚未新增任何費用</div>
-                            ) : (
-                                <div className="space-y-3">
-                                    {tripExpenses.map(exp => (
-                                        <div key={exp.id} className="flex items-center justify-between p-3 border border-stone-100 rounded-xl hover:bg-stone-50">
-                                            <div className="flex items-center gap-3">
-                                                <div className={`p-2 rounded-lg ${exp.category === 'Fuel' ? 'bg-amber-100 text-amber-600' : 'bg-stone-100 text-stone-600'}`}>
-                                                    {getCategoryIcon(exp.category)}
+                            {/* UI List View */}
+                            <div className="flex-1 overflow-auto p-4">
+                                {tripExpenses.length === 0 ? (
+                                    <div className="text-center text-stone-400 py-12">尚未新增任何費用</div>
+                                ) : (
+                                    <div className="space-y-3">
+                                        {tripExpenses.map(exp => (
+                                            <div key={exp.id} className="flex items-center justify-between p-3 border border-stone-100 rounded-xl hover:bg-stone-50">
+                                                <div className="flex items-center gap-3">
+                                                    <div className={`p-2 rounded-lg ${exp.category === 'Fuel' ? 'bg-amber-100 text-amber-600' : 'bg-stone-100 text-stone-600'}`}>
+                                                        {getCategoryIcon(exp.category)}
+                                                    </div>
+                                                    <div>
+                                                        <div className="font-bold text-stone-800 text-sm">{exp.description}</div>
+                                                        <div className="text-xs text-stone-400">{exp.claim_date} • {exp.category}</div>
+                                                    </div>
                                                 </div>
-                                                <div>
-                                                    <div className="font-bold text-stone-800 text-sm">{exp.description}</div>
-                                                    <div className="text-xs text-stone-400">{exp.claim_date} • {exp.category}</div>
+                                                <div className="flex items-center gap-4">
+                                                    <span className="font-mono font-bold text-stone-800">{exp.currency} {exp.amount.toLocaleString()}</span>
+                                                    {exp.status !== 'cancelled' && (() => {
+                                                        const status = expenseType === 'trip' && selectedTrip ? getTripStatus(selectedTrip.id) : { label: '一般', color: '' };
+                                                        const isLocked = expenseType === 'trip' && (status.label === '核准中' || status.label === '核銷完成');
+                                                        return !isLocked && (
+                                                            <button onClick={() => handleDeleteExpense(exp.id)} className="text-rose-300 hover:text-rose-500 p-1"><Trash2 size={16} /></button>
+                                                        );
+                                                    })()}
+                                                    {exp.status === 'cancelled' && <span className="text-xs text-stone-400 font-bold">已刪除</span>}
                                                 </div>
                                             </div>
-                                            <div className="flex items-center gap-4">
-                                                <span className="font-mono font-bold text-stone-800">{exp.currency} {exp.amount.toLocaleString()}</span>
-                                                {exp.status !== 'cancelled' && (() => {
-                                                    const status = expenseType === 'trip' && selectedTrip ? getTripStatus(selectedTrip.id) : { label: '一般', color: '' };
-                                                    const isLocked = expenseType === 'trip' && (status.label === '核准中' || status.label === '核銷完成');
-                                                    return !isLocked && (
-                                                        <button onClick={() => handleDeleteExpense(exp.id)} className="text-rose-300 hover:text-rose-500 p-1"><Trash2 size={16} /></button>
-                                                    );
-                                                })()}
-                                                {exp.status === 'cancelled' && <span className="text-xs text-stone-400 font-bold">已刪除</span>}
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
 
-                        <div className="p-4 border-t border-stone-100 bg-stone-50 text-right">
-                            <span className="text-sm font-bold text-stone-500 mr-2">總計金額:</span>
-                            <span className="text-2xl font-mono font-bold text-accent">TWD {totalAmount.toLocaleString()}</span>
+                            <div className="p-4 border-t border-stone-100 bg-stone-50 text-right">
+                                <span className="text-sm font-bold text-stone-500 mr-2">總計金額:</span>
+                                <span className="text-2xl font-mono font-bold text-accent">TWD {totalAmount.toLocaleString()}</span>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-        )}
+            )}
 
-        {/* Hidden Print Template */}
-        <div className="hidden">
-            <div ref={printRef} className="p-10 font-serif text-black bg-white max-w-[210mm] mx-auto">
-                <style>{`
+            {/* Hidden Print Template */}
+            <div className="hidden">
+                <div ref={printRef} className="p-10 font-serif text-black bg-white max-w-[210mm] mx-auto">
+                    <style>{`
                         @media print {
                             @page { size: A4; margin: 20mm; }
                             body { background: white; -webkit-print-color-adjust: exact; }
@@ -557,87 +555,87 @@ return (
                         }
                     `}</style>
 
-                <div className="text-center border-b-2 border-black pb-4 mb-6">
-                    <h1 className="text-3xl font-bold tracking-widest mb-2">{expenseType === 'trip' ? '出差旅費報告書' : '支出憑單核銷申請'}</h1>
-                    <h2 className="text-lg">{expenseType === 'trip' ? 'Travel Expense Report' : 'Payment Voucher'}</h2>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4 mb-6 text-sm">
-                    <div>
-                        <p className="mb-2"><span className="font-bold w-24 inline-block">申請日期:</span> {new Date().toLocaleDateString()}</p>
-                        {/* Updated to show Trip Applicant Info correctly */}
-                        <p className="mb-2"><span className="font-bold w-24 inline-block">申請部門:</span> {(selectedTrip?.employees as any)?.department || currentEmp?.department}</p>
-                        <p className="mb-2"><span className="font-bold w-24 inline-block">申請人:</span> {(selectedTrip?.employees as any)?.full_name || currentEmp?.full_name} ({(selectedTrip?.employees as any)?.job_title || currentEmp?.job_title})</p>
+                    <div className="text-center border-b-2 border-black pb-4 mb-6">
+                        <h1 className="text-3xl font-bold tracking-widest mb-2">{expenseType === 'trip' ? '出差旅費報告書' : '支出憑單核銷申請'}</h1>
+                        <h2 className="text-lg">{expenseType === 'trip' ? 'Travel Expense Report' : 'Payment Voucher'}</h2>
                     </div>
-                    <div className="text-right">
-                        {expenseType === 'trip' ? (
-                            <>
-                                <p className="mb-2"><span className="font-bold w-24 inline-block">出差單號:</span> #{selectedTrip?.id}</p>
-                                <p className="mb-2"><span className="font-bold w-24 inline-block">出差期間:</span> {selectedTrip ? `${new Date(selectedTrip.start_time).toLocaleDateString()} ~ ${new Date(selectedTrip.end_time).toLocaleDateString()}` : ''}</p>
-                            </>
-                        ) : (
-                            <p className="mb-2"><span className="font-bold w-24 inline-block">單據類型:</span> 一般支出 (雜支/公務車)</p>
-                        )}
-                    </div>
-                </div>
 
-                {expenseType === 'trip' && (
-                    <div className="mb-6">
-                        <p className="font-bold mb-1">出差事由 / 地點:</p>
-                        <div className="border border-black p-2 min-h-[40px]">{selectedTrip?.reason}</div>
+                    <div className="grid grid-cols-2 gap-4 mb-6 text-sm">
+                        <div>
+                            <p className="mb-2"><span className="font-bold w-24 inline-block">申請日期:</span> {new Date().toLocaleDateString()}</p>
+                            {/* Updated to show Trip Applicant Info correctly */}
+                            <p className="mb-2"><span className="font-bold w-24 inline-block">申請部門:</span> {(selectedTrip?.employees as any)?.department || currentEmp?.department}</p>
+                            <p className="mb-2"><span className="font-bold w-24 inline-block">申請人:</span> {(selectedTrip?.employees as any)?.full_name || currentEmp?.full_name} ({(selectedTrip?.employees as any)?.job_title || currentEmp?.job_title})</p>
+                        </div>
+                        <div className="text-right">
+                            {expenseType === 'trip' ? (
+                                <>
+                                    <p className="mb-2"><span className="font-bold w-24 inline-block">出差單號:</span> #{selectedTrip?.id}</p>
+                                    <p className="mb-2"><span className="font-bold w-24 inline-block">出差期間:</span> {selectedTrip ? `${new Date(selectedTrip.start_time).toLocaleDateString()} ~ ${new Date(selectedTrip.end_time).toLocaleDateString()}` : ''}</p>
+                                </>
+                            ) : (
+                                <p className="mb-2"><span className="font-bold w-24 inline-block">單據類型:</span> 一般支出 (雜支/公務車)</p>
+                            )}
+                        </div>
                     </div>
-                )}
 
-                <table className="w-full border-collapse border border-black text-sm mb-6">
-                    <thead>
-                        <tr className="bg-gray-200">
-                            <th className="border border-black p-2">日期</th>
-                            <th className="border border-black p-2">類別</th>
-                            <th className="border border-black p-2">摘要說明</th>
-                            <th className="border border-black p-2 text-right">金額 (TWD)</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {tripExpenses.filter(e => e.status !== 'cancelled').map(exp => (
-                            <tr key={exp.id}>
-                                <td className="border border-black p-2 text-center">{exp.claim_date}</td>
-                                <td className="border border-black p-2 text-center">{exp.category === 'Travel' ? '交通' : exp.category === 'Meal' ? '誤餐' : exp.category === 'Fuel' ? '加油' : exp.category}</td>
-                                <td className="border border-black p-2">{exp.description}</td>
-                                <td className="border border-black p-2 text-right font-mono">{exp.amount.toLocaleString()}</td>
+                    {expenseType === 'trip' && (
+                        <div className="mb-6">
+                            <p className="font-bold mb-1">出差事由 / 地點:</p>
+                            <div className="border border-black p-2 min-h-[40px]">{selectedTrip?.reason}</div>
+                        </div>
+                    )}
+
+                    <table className="w-full border-collapse border border-black text-sm mb-6">
+                        <thead>
+                            <tr className="bg-gray-200">
+                                <th className="border border-black p-2">日期</th>
+                                <th className="border border-black p-2">類別</th>
+                                <th className="border border-black p-2">摘要說明</th>
+                                <th className="border border-black p-2 text-right">金額 (TWD)</th>
                             </tr>
-                        ))}
-                        {tripExpenses.length === 0 && (
-                            <tr><td colSpan={4} className="border border-black p-4 text-center">無費用</td></tr>
-                        )}
-                        <tr className="bg-gray-100 font-bold">
-                            <td colSpan={3} className="border border-black p-2 text-right">總計 Total:</td>
-                            <td className="border border-black p-2 text-right">{totalAmount.toLocaleString()}</td>
-                        </tr>
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            {tripExpenses.filter(e => e.status !== 'cancelled').map(exp => (
+                                <tr key={exp.id}>
+                                    <td className="border border-black p-2 text-center">{exp.claim_date}</td>
+                                    <td className="border border-black p-2 text-center">{exp.category === 'Travel' ? '交通' : exp.category === 'Meal' ? '誤餐' : exp.category === 'Fuel' ? '加油' : exp.category}</td>
+                                    <td className="border border-black p-2">{exp.description}</td>
+                                    <td className="border border-black p-2 text-right font-mono">{exp.amount.toLocaleString()}</td>
+                                </tr>
+                            ))}
+                            {tripExpenses.length === 0 && (
+                                <tr><td colSpan={4} className="border border-black p-4 text-center">無費用</td></tr>
+                            )}
+                            <tr className="bg-gray-100 font-bold">
+                                <td colSpan={3} className="border border-black p-2 text-right">總計 Total:</td>
+                                <td className="border border-black p-2 text-right">{totalAmount.toLocaleString()}</td>
+                            </tr>
+                        </tbody>
+                    </table>
 
-                <div className="mt-12 grid grid-cols-4 gap-4 text-center">
-                    <div className="border-t border-black pt-2">
-                        <p className="mb-8">申請人</p>
+                    <div className="mt-12 grid grid-cols-4 gap-4 text-center">
+                        <div className="border-t border-black pt-2">
+                            <p className="mb-8">申請人</p>
+                        </div>
+                        <div className="border-t border-black pt-2">
+                            <p className="mb-8">部門主管</p>
+                        </div>
+                        <div className="border-t border-black pt-2">
+                            <p className="mb-8">財務審核</p>
+                        </div>
+                        <div className="border-t border-black pt-2">
+                            <p className="mb-8">總經理</p>
+                        </div>
                     </div>
-                    <div className="border-t border-black pt-2">
-                        <p className="mb-8">部門主管</p>
-                    </div>
-                    <div className="border-t border-black pt-2">
-                        <p className="mb-8">財務審核</p>
-                    </div>
-                    <div className="border-t border-black pt-2">
-                        <p className="mb-8">總經理</p>
-                    </div>
-                </div>
 
-                <div className="mt-8 text-xs text-gray-500 text-center">
-                    * 本單據由 EnterpriseOps 系統自動生成，請檢附相關發票或收據憑證。
+                    <div className="mt-8 text-xs text-gray-500 text-center">
+                        * 本單據由 EnterpriseOps 系統自動生成，請檢附相關發票或收據憑證。
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-);
+    );
 };
 
 export default ExpenseClaims;

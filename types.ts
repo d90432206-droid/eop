@@ -138,3 +138,25 @@ export interface Visitor {
   created_at?: string;
   employees?: Employee; // Host info
 }
+
+export interface Asset {
+  id: number;
+  asset_code?: string;
+  category: string;
+  name: string;
+  model: string | null;
+  serial_number?: string | null;
+  purchase_date: string;
+  amount: number;
+  currency: string;
+
+  custodian: string | null;
+  department: string | null;
+  location: string | null;
+
+  status: 'active' | 'maintenance' | 'scrapped' | 'lost';
+  image_url?: string | null;
+
+  description: string | null;
+  created_at?: string;
+}
