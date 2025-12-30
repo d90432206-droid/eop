@@ -136,52 +136,65 @@ const AssetManagement: React.FC = () => {
                 </div>
             </div>
 
-            {/* Assets Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {loading ? (
-                    <div className="col-span-full py-20 text-center text-stone-400">載入中...</div>
-                ) : filteredAssets.length === 0 ? (
-                    <div className="col-span-full py-20 text-center text-stone-400 border-2 border-dashed border-stone-200 rounded-2xl">
-                        查無資產資料
+            {/* Summary Widget */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                <div className="bg-stone-800 text-white p-4 rounded-xl shadow-lg">
+                    <p className="text-stone-400 text-xs font-bold uppercase mb-1">資產總額</p>
+                    <p className="text-2xl font-mono font-bold">NT$ {filteredAssets.reduce((sum, a) => sum + a.amount, 0).toLocaleString()}</p>
+                </div>
+                {/* Category Summaries */}
+                {Array.from(new Set(filteredAssets.map(a => a.category))).slice(0, 3).map(cat => (
+                    <div key={cat} className="bg-white p-4 rounded-xl shadow-sm border border-stone-100">
+                        <p className="text-stone-500 text-xs font-bold uppercase mb-1">{cat}</p>
+                        <p className="text-lg font-mono font-bold text-stone-700">NT$ {filteredAssets.filter(a => a.category === cat).reduce((sum, a) => sum + a.amount, 0).toLocaleString()}</p>
                     </div>
-                ) : (
-                    filteredAssets.map(asset => (
-                        <div key={asset.id} className="bg-white rounded-2xl shadow-sm border border-stone-200 overflow-hidden hover:shadow-md transition-shadow group">
-                            <div className="p-5">
-                                <div className="flex justify-between items-start mb-4">
-                                    <span className="bg-stone-100 text-stone-600 px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1">
-                                        <Tag size={12} /> {asset.category}
-                                    </span>
-                                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <button onClick={() => openEditModal(asset)} className="p-1.5 hover:bg-stone-100 rounded-lg text-stone-500 hover:text-emerald-600"><Edit3 size={16} /></button>
-                                        <button onClick={() => handleDelete(asset.id)} className="p-1.5 hover:bg-rose-50 rounded-lg text-stone-500 hover:text-rose-500"><Trash2 size={16} /></button>
-                                    </div>
-                                </div>
-                                <h3 className="text-lg font-bold text-stone-800 mb-1 line-clamp-1">{asset.name}</h3>
-                                <p className="text-stone-400 text-sm font-mono mb-4">{asset.model || '無型號'}</p>
+                ))}
+            </div>
 
-                                <div className="space-y-2 text-sm text-stone-600">
-                                    <div className="flex items-center gap-2">
-                                        <Calendar size={14} className="text-stone-400" />
-                                        <span>購於 {asset.purchase_date}</span>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <User size={14} className="text-stone-400" />
-                                        <span>{asset.custodian || '未分配'} ({asset.department || '-'})</span>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <MapPin size={14} className="text-stone-400" />
-                                        <span>{asset.location || '未指定位置'}</span>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <DollarSign size={14} className="text-stone-400" />
-                                        <span className="font-mono font-bold">NT$ {asset.amount.toLocaleString()}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    ))
-                )}
+            {/* Assets Table */}
+            <div className="bg-white rounded-2xl shadow-sm border border-stone-200 overflow-hidden">
+                <table className="w-full text-left text-sm">
+                    <thead className="bg-stone-50 border-b border-stone-100">
+                        <tr>
+                            <th className="p-4 font-bold text-stone-500">資產編號</th>
+                            <th className="p-4 font-bold text-stone-500">類別</th>
+                            <th className="p-4 font-bold text-stone-500">名稱</th>
+                            <th className="p-4 font-bold text-stone-500">型號</th>
+                            <th className="p-4 font-bold text-stone-500">保管人/部門</th>
+                            <th className="p-4 font-bold text-stone-500">購買日期</th>
+                            <th className="p-4 font-bold text-stone-500 text-right">金額</th>
+                            <th className="p-4 font-bold text-stone-500 text-right">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-stone-100">
+                        {loading ? (
+                            <tr><td colSpan={8} className="p-8 text-center text-stone-400">載入中...</td></tr>
+                        ) : filteredAssets.length === 0 ? (
+                            <tr><td colSpan={8} className="p-8 text-center text-stone-400">無資產資料</td></tr>
+                        ) : (
+                            filteredAssets.map(asset => (
+                                <tr key={asset.id} className="hover:bg-stone-50 transition-colors">
+                                    <td className="p-4 font-mono text-stone-400">#{asset.id}</td>
+                                    <td className="p-4"><span className="bg-stone-100 text-stone-600 px-2 py-1 rounded text-xs font-bold">{asset.category}</span></td>
+                                    <td className="p-4 font-bold text-stone-800">{asset.name}</td>
+                                    <td className="p-4 text-stone-500">{asset.model || '-'}</td>
+                                    <td className="p-4">
+                                        <div className="text-stone-800">{asset.custodian || '未分配'}</div>
+                                        <div className="text-xs text-stone-400">{asset.department}</div>
+                                    </td>
+                                    <td className="p-4 text-stone-500">{asset.purchase_date}</td>
+                                    <td className="p-4 text-right font-mono font-bold text-stone-700">NT$ {asset.amount.toLocaleString()}</td>
+                                    <td className="p-4 text-right">
+                                        <div className="flex items-center justify-end gap-2">
+                                            <button onClick={() => openEditModal(asset)} className="p-1.5 hover:bg-stone-100 rounded-lg text-stone-500 hover:text-emerald-600"><Edit3 size={16} /></button>
+                                            <button onClick={() => handleDelete(asset.id)} className="p-1.5 hover:bg-rose-50 rounded-lg text-stone-500 hover:text-rose-500"><Trash2 size={16} /></button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))
+                        )}
+                    </tbody>
+                </table>
             </div>
 
             {/* Modal */}

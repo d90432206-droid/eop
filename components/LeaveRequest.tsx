@@ -118,13 +118,16 @@ const LeaveRequestPage: React.FC = () => {
         setIsOvertime(!isOvertime);
     };
 
-    const handleQuickTimeSelect = (type: 'am' | 'pm') => {
+    const handleQuickTimeSelect = (type: 'am' | 'pm' | 'full') => {
         if (type === 'am') {
             setStartTime('08:00');
             setEndTime('12:00');
-        } else {
+        } else if (type === 'pm') {
             setStartTime('13:15');
-            setEndTime('17:15');
+            setEndTime('17:30');
+        } else if (type === 'full') {
+            setStartTime('08:00');
+            setEndTime('17:30');
         }
     };
 
@@ -289,20 +292,13 @@ const LeaveRequestPage: React.FC = () => {
         const loopEnd = new Date(end); loopEnd.setHours(0, 0, 0, 0);
 
         // Updated Lunch: 12:00 - 13:15 (75m)
-        // Blocks:
-        // 1. 08:00 - 12:00 (4h)
-        // 2. 13:15 - 17:15 (4h) => Total 8h
-        // Note: Original was until 17:30? If 8h day, usually 8-12 + 13:15-17:15 = 8h.
-        // User requested: Special/Sick half day AM 08:00-12:15 (wait, user said 12:15 in prev request, but now said "不足4小時以4小時計" and "超過12:00的，一律計算到13:15")
-        // User example: "10:00他申請，計算到13:15，就是扣2小時".
-        // This suggests:
-        //  08:00-12:00 is Morning Block.
-        //  Lunch 12:00-13:15.
-        //  If end time falls in lunch, it extends to 13:15 but doesn't count duration.
-        // Let's use strict work blocks.
+        // Updated Round 3:
+        // PM Break: 15:15 - 15:30 (15m) needs to be deducted.
+        // So PM Work Blocks: 13:15 ~ 15:15 (2h), 15:30 ~ 17:30 (2h)
         const workBlocks = [
             { sH: 8, sM: 0, eH: 12, eM: 0 },    // 08:00 - 12:00
-            { sH: 13, sM: 15, eH: 17, eM: 15 }, // 13:15 - 17:15 (Matches 4h PM)
+            { sH: 13, sM: 15, eH: 15, eM: 15 }, // 13:15 - 15:15
+            { sH: 15, sM: 30, eH: 17, eM: 30 }, // 15:30 - 17:30
         ];
 
         while (current <= loopEnd) {
@@ -430,11 +426,17 @@ const LeaveRequestPage: React.FC = () => {
                 duration = Math.ceil(rawDuration / 4) * 4;
             }
         } else if (leaveType === 'other') {
-            // Rule 2: Personal Leave - Round up to 2/4/6/8...
-            // "位數都以小時個位數計算" -> integers. "不足2/4/6/8...以進位"
+            // Rule 2: Personal Leave
+            // Constraint: Max end time effectively limited to 17:30 for calculations?
+            // "事假利用快捷鍵申請時，最長的時間計算只到17:30"
+            // If rawDuration spans past 17:30 logic (which it shouldn't if we use workBlocks logic, as blocks end at 17:30).
+            // The `calculateDurationLogic` uses `workBlocks` which only count up to 17:30.
+            // So if user selects 18:00 end time, it just won't add hours after 17:30.
+            // This is already handled by work blocks!
+
+            // Rounding Up
             if (rawDuration > 0) {
                 const ceiling = Math.ceil(rawDuration);
-                // Ensure it matches 2,4,6,8 steps
                 if (ceiling % 2 !== 0) duration = ceiling + 1;
                 else duration = ceiling;
             }
@@ -881,12 +883,14 @@ const LeaveRequestPage: React.FC = () => {
                                         </select>
                                     </div>
                                     {/* Quick Selection for AM/PM */}
-                                    {leaveType === 'annual' || leaveType === 'sick' ? (
+                                    {leaveType === 'annual' || leaveType === 'sick' || leaveType === 'other' ? (
                                         <div className="flex gap-2 mt-2">
                                             <button type="button" onClick={() => handleQuickTimeSelect('am')} className="flex-1 py-1.5 bg-stone-50 border border-stone-200 rounded-lg text-xs font-bold text-stone-600 hover:bg-stone-100">上午 (08:00-12:00)</button>
-                                            <button type="button" onClick={() => handleQuickTimeSelect('pm')} className="flex-1 py-1.5 bg-stone-50 border border-stone-200 rounded-lg text-xs font-bold text-stone-600 hover:bg-stone-100">下午 (13:15-17:15)</button>
+                                            <button type="button" onClick={() => handleQuickTimeSelect('pm')} className="flex-1 py-1.5 bg-stone-50 border border-stone-200 rounded-lg text-xs font-bold text-stone-600 hover:bg-stone-100">下午 (13:15-17:30)</button>
+                                            <button type="button" onClick={() => handleQuickTimeSelect('full')} className="flex-1 py-1.5 bg-stone-50 border border-stone-200 rounded-lg text-xs font-bold text-stone-600 hover:bg-stone-100">全天 (08:00-17:30)</button>
                                         </div>
-                                    ) : leaveType === 'other' ? (
+                                    ) : null}
+                                    {leaveType === 'other' ? (
                                         <div className="flex gap-2 mt-2 flex-wrap">
                                             {[2, 4, 6, 8].map(h => (
                                                 <button key={h} type="button" onClick={() => handleDurationSelect(h)} className="flex-1 min-w-[60px] py-1.5 bg-stone-50 border border-stone-200 rounded-lg text-xs font-bold text-stone-600 hover:bg-stone-100">{h}小時</button>
