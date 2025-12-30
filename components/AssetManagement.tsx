@@ -9,6 +9,7 @@ const AssetManagement: React.FC = () => {
     const [loading, setLoading] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [filterDept, setFilterDept] = useState('All');
+    const [viewStatus, setViewStatus] = useState<'active' | 'scrapped'>('active');
 
     // Modal State
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -54,13 +55,30 @@ const AssetManagement: React.FC = () => {
         }
     };
 
-    const handleDelete = async (id: number) => {
-        if (!confirm("確定要刪除此資產嗎？")) return;
-        try {
-            await deleteAsset(id);
-            fetchData();
-        } catch (error: any) {
-            alert(error.message);
+    const handleDelete = async (asset: Asset) => {
+        if (asset.status === 'scrapped') {
+            // Hard Delete
+            const confirmName = prompt(`⚠️ 永久刪除警告 ⚠️\n\n此操作無法復原！若確定要永久刪除，請輸入資產名稱：\n\n${asset.name}`);
+            if (confirmName !== asset.name) {
+                if (confirmName !== null) alert("輸入名稱不符，取消刪除。");
+                return;
+            }
+            try {
+                await deleteAsset(asset.id);
+                fetchData();
+            } catch (error: any) {
+                alert(error.message);
+            }
+        } else {
+            // Soft Delete (Archive)
+            if (!confirm(`確定要將此資產移至「封存區 (報廢)」嗎？\n\n資產：${asset.name}`)) return;
+            try {
+                await updateAsset(asset.id, { ...asset, status: 'scrapped' });
+                fetchData();
+                alert("已移至封存區");
+            } catch (error: any) {
+                alert(error.message);
+            }
         }
     };
 
@@ -82,9 +100,13 @@ const AssetManagement: React.FC = () => {
 
     // Filter Logic
     const filteredAssets = assets.filter(asset => {
-        const matchesSearch = asset.name.includes(searchTerm) || asset.model?.includes(searchTerm) || asset.custodian?.includes(searchTerm);
+        const matchesSearch = asset.name.includes(searchTerm) || (asset.model && asset.model.includes(searchTerm)) || (asset.custodian && asset.custodian.includes(searchTerm)) || (asset.asset_code && asset.asset_code.includes(searchTerm));
         const matchesDept = filterDept === 'All' || asset.department === filterDept;
-        return matchesSearch && matchesDept;
+
+        const isScrapped = asset.status === 'scrapped';
+        const matchesStatus = viewStatus === 'active' ? !isScrapped : isScrapped;
+
+        return matchesSearch && matchesDept && matchesStatus;
     });
 
     const departments = Array.from(new Set(employees.map(e => e.department).filter(Boolean)));
@@ -97,6 +119,7 @@ const AssetManagement: React.FC = () => {
                     <h2 className="text-3xl font-bold text-stone-800 tracking-tight flex items-center gap-3">
                         <Package size={32} className="text-emerald-600" />
                         資產管理
+                        {viewStatus === 'scrapped' && <span className="text-sm bg-stone-200 text-stone-600 px-2 py-1 rounded ml-2">封存區 (報廢)</span>}
                     </h2>
                     <p className="text-stone-500 mt-1">管理公司固定資產、設備與保管紀錄</p>
                 </div>
@@ -131,8 +154,11 @@ const AssetManagement: React.FC = () => {
                         {departments.map(d => <option key={d} value={d!}>{d}</option>)}
                     </select>
                 </div>
-                <div className="flex items-center justify-end text-stone-500 text-sm font-bold">
-                    共 {filteredAssets.length} 筆資產
+                <div className="flex items-center justify-end gap-2 text-stone-500 text-sm font-bold">
+                    <div className="flex bg-stone-100 p-1 rounded-lg">
+                        <button onClick={() => setViewStatus('active')} className={`px-3 py-1 rounded-md transition-all ${viewStatus === 'active' ? 'bg-white shadow text-stone-800' : 'text-stone-400 hover:text-stone-600'}`}>現役資產</button>
+                        <button onClick={() => setViewStatus('scrapped')} className={`px-3 py-1 rounded-md transition-all ${viewStatus === 'scrapped' ? 'bg-white shadow text-stone-800' : 'text-stone-400 hover:text-stone-600'}`}>封存區</button>
+                    </div>
                 </div>
             </div>
 
@@ -187,7 +213,7 @@ const AssetManagement: React.FC = () => {
                                     <td className="p-4 text-right">
                                         <div className="flex items-center justify-end gap-2">
                                             <button onClick={() => openEditModal(asset)} className="p-1.5 hover:bg-stone-100 rounded-lg text-stone-500 hover:text-emerald-600"><Edit3 size={16} /></button>
-                                            <button onClick={() => handleDelete(asset.id)} className="p-1.5 hover:bg-rose-50 rounded-lg text-stone-500 hover:text-rose-500"><Trash2 size={16} /></button>
+                                            <button onClick={() => handleDelete(asset)} className="p-1.5 hover:bg-rose-50 rounded-lg text-stone-500 hover:text-rose-500"><Trash2 size={16} /></button>
                                         </div>
                                     </td>
                                 </tr>

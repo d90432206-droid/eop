@@ -121,7 +121,7 @@ const LeaveRequestPage: React.FC = () => {
     const handleQuickTimeSelect = (type: 'am' | 'pm' | 'full') => {
         if (type === 'am') {
             setStartTime('08:00');
-            setEndTime('12:00');
+            setEndTime('12:15');
         } else if (type === 'pm') {
             setStartTime('13:15');
             setEndTime('17:30');

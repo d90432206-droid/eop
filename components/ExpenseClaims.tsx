@@ -190,12 +190,24 @@ const ExpenseClaims: React.FC = () => {
     }
 
     const handleSubmitAll = async () => {
-        if (!selectedTrip) return;
+        if (!selectedTrip && expenseType !== 'general') return;
         if (!confirm("確定要送出這些費用進行審核嗎？送出後將無法修改。")) return;
 
         try {
-            await submitExpenseClaim(selectedTrip.id);
-            await fetchTripExpenses(selectedTrip.id); // Refresh to see updated status
+            if (expenseType === 'trip' && selectedTrip) {
+                await submitExpenseClaim(selectedTrip.id);
+                await fetchTripExpenses(selectedTrip.id);
+            } else {
+                // General Expenses: Batch Update to 'pending_dept'
+                const pendingItems = tripExpenses.filter(e => e.status === 'pending');
+                if (pendingItems.length === 0) {
+                    alert('沒有待審核的項目');
+                    return;
+                }
+                await Promise.all(pendingItems.map(e => updateExpenseStatus(e.id, 'pending_dept')));
+                await refreshData();
+                fetchGeneralExpenses(); // Refresh local list
+            }
 
             // Refresh global status
             if (currentUserId) {
@@ -209,10 +221,20 @@ const ExpenseClaims: React.FC = () => {
     };
 
     const getTripStatus = (tripId: number) => {
+        // General Expense Logic
+        if (expenseType === 'general') {
+            // For general, we check the displayed expenses (tripExpenses)
+            const statuses = tripExpenses.map(e => e.status);
+            if (statuses.length === 0) return { label: '一般報銷', color: 'bg-stone-100 text-stone-500' };
+
+            if (statuses.some(s => s === 'returned' || s === 'rejected')) return { label: '退回/拒絕', color: 'bg-rose-100 text-rose-600' };
+            if (statuses.some(s => s === 'pending_dept' || s === 'pending_gm')) return { label: '核准中', color: 'bg-blue-100 text-blue-600' };
+            if (statuses.every(s => s === 'approved')) return { label: '核銷完成', color: 'bg-emerald-100 text-emerald-600' };
+            return { label: '填寫中', color: 'bg-amber-100 text-amber-600' };
+        }
+
         const tripTag = `[TRIP-${tripId}]`;
         const expenses = allMyExpenses.filter(e => e.description && e.description.includes(tripTag));
-
-        if (expenseType === 'general') return { label: '一般報銷', color: 'bg-stone-100 text-stone-500' };
 
         if (expenses.length === 0) return { label: '未申請', color: 'bg-stone-100 text-stone-500' };
 
@@ -392,7 +414,7 @@ const ExpenseClaims: React.FC = () => {
                 <ChevronLeft size={20} /> 返回列表
             </button>
 
-            {selectedTrip && (
+            {(selectedTrip || expenseType === 'general') && (
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
                     {/* Left: Trip Info & Form */}
@@ -426,8 +448,8 @@ const ExpenseClaims: React.FC = () => {
                                 <Plus size={20} className="text-accent" /> 新增費用
                             </h3>
                             {(() => {
-                                const status = expenseType === 'trip' && selectedTrip ? getTripStatus(selectedTrip.id) : { label: '一般', color: '' };
-                                const isLocked = expenseType === 'trip' && (status.label === '核准中' || status.label === '核銷完成');
+                                const status = expenseType === 'trip' && selectedTrip ? getTripStatus(selectedTrip.id) : getTripStatus(0); // 0 or dummy for general
+                                const isLocked = (status.label === '核准中' || status.label === '核銷完成');
 
                                 return (
                                     <form onSubmit={handleSubmitExpense} className="space-y-4">
@@ -494,7 +516,7 @@ const ExpenseClaims: React.FC = () => {
                                 <button onClick={handlePrint} disabled={tripExpenses.length === 0} className="flex items-center gap-2 bg-white text-stone-700 px-3 py-1.5 rounded-lg border border-stone-300 text-sm font-bold hover:bg-stone-50 disabled:opacity-50">
                                     <Printer size={16} /> 列印
                                 </button>
-                                {tripExpenses.some(e => e.status === 'pending') && expenseType === 'trip' && (
+                                {tripExpenses.some(e => e.status === 'pending') && (expenseType === 'trip' || expenseType === 'general') && (
                                     <button onClick={handleSubmitAll} className="flex items-center gap-2 bg-emerald-600 text-white px-3 py-1.5 rounded-lg border border-emerald-700 text-sm font-bold hover:bg-emerald-700 shadow-sm ml-2">
                                         <Send size={16} /> 送出至總務
                                     </button>
@@ -521,8 +543,8 @@ const ExpenseClaims: React.FC = () => {
                                                 <div className="flex items-center gap-4">
                                                     <span className="font-mono font-bold text-stone-800">{exp.currency} {exp.amount.toLocaleString()}</span>
                                                     {exp.status !== 'cancelled' && (() => {
-                                                        const status = expenseType === 'trip' && selectedTrip ? getTripStatus(selectedTrip.id) : { label: '一般', color: '' };
-                                                        const isLocked = expenseType === 'trip' && (status.label === '核准中' || status.label === '核銷完成');
+                                                        const status = expenseType === 'trip' && selectedTrip ? getTripStatus(selectedTrip.id) : getTripStatus(0);
+                                                        const isLocked = (status.label === '核准中' || status.label === '核銷完成');
                                                         return !isLocked && (
                                                             <button onClick={() => handleDeleteExpense(exp.id)} className="text-rose-300 hover:text-rose-500 p-1"><Trash2 size={16} /></button>
                                                         );

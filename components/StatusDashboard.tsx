@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { getEmployees, updateEmployeeStatus, getLeaveRequests, getCurrentEmployee } from '../services/supabaseService';
 import { Employee, EmployeeStatus, LeaveRequest } from '../types';
-import { MapPin, Clock, CheckCircle2, AlertCircle, Plane, Coffee, Building2, RefreshCw, Search, Filter, Globe2, Calendar as CalendarIcon, List, ArrowRight, X, Send, Briefcase, ChevronUp, Phone, CloudRain, Utensils, Plus, Users, ShieldCheck } from 'lucide-react';
+import { MapPin, Clock, CheckCircle2, AlertCircle, Plane, Coffee, Building2, RefreshCw, Search, Filter, Globe2, Calendar as CalendarIcon, List, ArrowRight, X, Send, Briefcase, ChevronUp, Phone, CloudRain, Utensils, Plus, Users, ShieldCheck, Edit3 } from 'lucide-react';
 
 const StatusDashboard: React.FC = () => {
     const [employees, setEmployees] = useState<Employee[]>([]);
@@ -616,11 +616,30 @@ const StatusDashboard: React.FC = () => {
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                                <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                    <button onClick={() => handleQuickStatusUpdate(emp.id, 'in_office')} className="text-emerald-600 hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100 px-2 py-1 rounded text-xs border border-emerald-100 font-bold transition-colors">廠內</button>
-                                                    <button onClick={() => handleQuickStatusUpdate(emp.id, 'meeting')} className="text-amber-600 hover:text-amber-800 bg-amber-50 hover:bg-amber-100 px-2 py-1 rounded text-xs border border-amber-100 font-bold transition-colors">會議</button>
-                                                    <button onClick={() => handleQuickStatusUpdate(emp.id, 'out')} className="text-stone-600 hover:text-stone-800 bg-stone-100 hover:bg-stone-200 px-2 py-1 rounded text-xs border border-stone-200 font-bold transition-colors">外出</button>
-                                                    <button onClick={() => handleQuickStatusUpdate(emp.id, 'abroad')} className="text-sky-600 hover:text-sky-800 bg-sky-50 hover:bg-sky-100 px-2 py-1 rounded text-xs border border-sky-100 font-bold transition-colors">出國</button>
+                                                <div className="flex justify-end gap-1 items-center">
+                                                    {(currentEmp?.role === 'admin' || currentEmp?.job_title?.includes('經理')) && (
+                                                        <button
+                                                            onClick={() => {
+                                                                setStatusModal({
+                                                                    isOpen: true,
+                                                                    targetId: emp.id,
+                                                                    newStatus: emp.current_status,
+                                                                    note: '',
+                                                                    returnTime: ''
+                                                                });
+                                                            }}
+                                                            className="text-stone-400 hover:text-stone-700 p-1.5 rounded-lg hover:bg-stone-100 mr-2"
+                                                            title="修改狀態"
+                                                        >
+                                                            <Edit3 size={16} />
+                                                        </button>
+                                                    )}
+                                                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        <button onClick={() => handleQuickStatusUpdate(emp.id, 'in_office')} className="text-emerald-600 hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100 px-2 py-1 rounded text-xs border border-emerald-100 font-bold transition-colors">廠內</button>
+                                                        <button onClick={() => handleQuickStatusUpdate(emp.id, 'meeting')} className="text-amber-600 hover:text-amber-800 bg-amber-50 hover:bg-amber-100 px-2 py-1 rounded text-xs border border-amber-100 font-bold transition-colors">會議</button>
+                                                        <button onClick={() => handleQuickStatusUpdate(emp.id, 'out')} className="text-stone-600 hover:text-stone-800 bg-stone-100 hover:bg-stone-200 px-2 py-1 rounded text-xs border border-stone-200 font-bold transition-colors">外出</button>
+                                                        <button onClick={() => handleQuickStatusUpdate(emp.id, 'abroad')} className="text-sky-600 hover:text-sky-800 bg-sky-50 hover:bg-sky-100 px-2 py-1 rounded text-xs border border-sky-100 font-bold transition-colors">出國</button>
+                                                    </div>
                                                 </div>
                                             </td>
                                         </tr>
