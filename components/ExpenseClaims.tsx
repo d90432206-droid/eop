@@ -82,9 +82,9 @@ const ExpenseClaims: React.FC = () => {
     // Actually schema links `leave_request_id`. For general, it might be NULL.
     // Let's assume NULL `leave_request_id` means General Expense.
     const fetchGeneralExpenses = () => {
-        const general = allMyExpenses.filter(e => !e.leave_request_id);
-        // We use state `tripExpenses` to reuse the list UI, but maybe we should separate?
-        // Reuse `tripExpenses` but rename var conceptually in head.
+        // Fix: DB does not store leave_request_id, so we must filter by Description Tag.
+        // General expenses are those that do NOT start with [TRIP-...]
+        const general = allMyExpenses.filter(e => !e.description?.startsWith('[TRIP-'));
         setTripExpenses(general);
     }
 
@@ -148,7 +148,7 @@ const ExpenseClaims: React.FC = () => {
                 if (user) {
                     const all = await getAllMyExpenseClaims(user.id);
                     setAllMyExpenses(all);
-                    setTripExpenses(all.filter(e => !e.leave_request_id));
+                    setTripExpenses(all.filter(e => !e.description?.startsWith('[TRIP-')));
                 }
             }
             alert("✅ 費用已新增");
@@ -176,7 +176,7 @@ const ExpenseClaims: React.FC = () => {
                 if (user) {
                     const all = await getAllMyExpenseClaims(user.id);
                     setAllMyExpenses(all);
-                    setTripExpenses(all.filter(e => !e.leave_request_id));
+                    setTripExpenses(all.filter(e => !e.description?.startsWith('[TRIP-')));
                 }
             }
             // Refresh global status
