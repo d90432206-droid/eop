@@ -521,12 +521,12 @@ const ExpenseClaims: React.FC = () => {
                         <div className="bg-white rounded-2xl shadow-sm border border-stone-200 flex flex-col h-full overflow-hidden">
                             <div className="p-4 border-b border-stone-100 flex justify-between items-center bg-stone-50">
                                 <h3 className="font-bold text-stone-800 flex items-center gap-2">
-                                    <FileText size={20} className="text-stone-400" /> 費用明細 ({tripExpenses.length})
+                                    <FileText size={20} className="text-stone-400" /> 費用明細 ({tripExpenses?.length || 0})
                                 </h3>
                                 <button onClick={handlePrint} disabled={tripExpenses.length === 0} className="flex items-center gap-2 bg-white text-stone-700 px-3 py-1.5 rounded-lg border border-stone-300 text-sm font-bold hover:bg-stone-50 disabled:opacity-50">
                                     <Printer size={16} /> 列印
                                 </button>
-                                {tripExpenses.some(e => e.status === 'pending') && (expenseType === 'trip' || expenseType === 'general') && (
+                                {tripExpenses?.some(e => e.status === 'pending') && (expenseType === 'trip' || expenseType === 'general') && (
                                     <button onClick={handleSubmitAll} className="flex items-center gap-2 bg-emerald-600 text-white px-3 py-1.5 rounded-lg border border-emerald-700 text-sm font-bold hover:bg-emerald-700 shadow-sm ml-2">
                                         <Send size={16} /> 送出至總務
                                     </button>

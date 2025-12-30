@@ -885,7 +885,7 @@ const LeaveRequestPage: React.FC = () => {
                                     {/* Quick Selection for AM/PM */}
                                     {leaveType === 'annual' || leaveType === 'sick' || leaveType === 'other' ? (
                                         <div className="flex gap-2 mt-2">
-                                            <button type="button" onClick={() => handleQuickTimeSelect('am')} className="flex-1 py-1.5 bg-stone-50 border border-stone-200 rounded-lg text-xs font-bold text-stone-600 hover:bg-stone-100">上午 (08:00-12:00)</button>
+                                            <button type="button" onClick={() => handleQuickTimeSelect('am')} className="flex-1 py-1.5 bg-stone-50 border border-stone-200 rounded-lg text-xs font-bold text-stone-600 hover:bg-stone-100">上午 (08:00~12:15)</button>
                                             <button type="button" onClick={() => handleQuickTimeSelect('pm')} className="flex-1 py-1.5 bg-stone-50 border border-stone-200 rounded-lg text-xs font-bold text-stone-600 hover:bg-stone-100">下午 (13:15-17:30)</button>
                                             <button type="button" onClick={() => handleQuickTimeSelect('full')} className="flex-1 py-1.5 bg-stone-50 border border-stone-200 rounded-lg text-xs font-bold text-stone-600 hover:bg-stone-100">全天 (08:00-17:30)</button>
                                         </div>
