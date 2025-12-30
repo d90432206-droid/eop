@@ -44,6 +44,9 @@ const StatusDashboard: React.FC = () => {
         let hasUpdates = false;
 
         currentEmployees.forEach(emp => {
+            // SKIP SELF: Do not auto-sync the current user (allow manual override without reverting)
+            if (currentEmp && emp.id === currentEmp.id) return;
+
             // 1. Check for Active Leave Request (Higher Priority)
             const activeReq = allLeaves.find(req => {
                 const start = new Date(req.start_time);

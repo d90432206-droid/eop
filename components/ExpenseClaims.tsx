@@ -206,7 +206,8 @@ const ExpenseClaims: React.FC = () => {
                     return;
                 }
                 // Filter out any items that might not have a valid ID (though they should)
-                const itemsToSubmit = pendingItems.filter(e => typeof e.id === 'number');
+                // Fix: ID can be string or number depending on DB driver/JSON
+                const itemsToSubmit = pendingItems.filter(e => e.id !== undefined && e.id !== null);
                 if (itemsToSubmit.length === 0) {
                     alert('沒有有效的待審核項目 (ID Error)');
                     return;
