@@ -457,7 +457,8 @@ const ExpenseClaims: React.FC = () => {
                             </h3>
                             {(() => {
                                 const status = expenseType === 'trip' && selectedTrip ? getTripStatus(selectedTrip.id) : getTripStatus(0); // 0 or dummy for general
-                                const isLocked = (status.label === '核准中' || status.label === '核銷完成');
+                                // Fix: General Expense Add Form should NEVER be locked by status of previous items
+                                const isLocked = expenseType === 'trip' && (status.label === '核准中' || status.label === '核銷完成');
 
                                 return (
                                     <form onSubmit={handleSubmitExpense} className="space-y-4">
@@ -533,49 +534,73 @@ const ExpenseClaims: React.FC = () => {
 
                             {/* UI List View */}
                             <div className="flex-1 overflow-auto p-4">
-                                {tripExpenses.length === 0 ? (
-                                    <div className="text-center text-stone-400 py-12">尚未新增任何費用</div>
-                                ) : (
-                                    <div className="space-y-3">
-                                        {tripExpenses.map(exp => (
-                                            <div key={exp.id} className="flex items-center justify-between p-3 border border-stone-100 rounded-xl hover:bg-stone-50">
-                                                <div className="flex items-center gap-3">
-                                                    <div className={`p-2 rounded-lg ${exp.category === 'Fuel' ? 'bg-amber-100 text-amber-600' : 'bg-stone-100 text-stone-600'}`}>
-                                                        {getCategoryIcon(exp.category)}
-                                                    </div>
-                                                    <div>
-                                                        <div className="font-bold text-stone-800 text-sm">{exp.description}</div>
-                                                        <div className="text-xs text-stone-400">{exp.claim_date} • {exp.category}</div>
+                                {(() => {
+                                    // For General, only show Drafts & Returned by default to keep "workspace" clean?
+                                    // Or just separate them. Let's separate.
+                                    const drafts = tripExpenses.filter(e => e.status === 'pending' || e.status === 'returned');
+                                    const history = tripExpenses.filter(e => e.status !== 'pending' && e.status !== 'returned');
+
+                                    // If Trip, show all. If General, show drafts, and maybe history in separate block?
+                                    // User wants "continuous application".
+                                    const showList = (expenseType === 'trip') ? tripExpenses : drafts;
+
+                                    return (
+                                        <div className="space-y-6">
+                                            {/* Drafts / Active Items */}
+                                            {showList.length === 0 ? (
+                                                <div className="text-center text-stone-400 py-12">
+                                                    {expenseType === 'general' ? '目前沒有待送出的費用' : '尚未新增任何費用'}
+                                                </div>
+                                            ) : (
+                                                <div className="space-y-3">
+                                                    {showList.map(exp => (
+                                                        <div key={exp.id} className="flex items-center justify-between p-3 border border-stone-100 rounded-xl hover:bg-stone-50">
+                                                            <div className="flex items-center gap-3">
+                                                                <div className={`p-2 rounded-lg ${exp.category === 'Fuel' ? 'bg-amber-100 text-amber-600' : 'bg-stone-100 text-stone-600'}`}>
+                                                                    {getCategoryIcon(exp.category)}
+                                                                </div>
+                                                                <div>
+                                                                    <div className="font-bold text-stone-800 text-sm">{exp.description}</div>
+                                                                    <div className="text-xs text-stone-400">{exp.claim_date} • {exp.category}</div>
+                                                                </div>
+                                                            </div>
+                                                            <div className="flex items-center gap-4">
+                                                                {/* Only show amount and delete for draft */}
+                                                                <span className="font-mono font-bold text-stone-800">{exp.currency} {exp.amount.toLocaleString()}</span>
+                                                                <button onClick={() => handleDeleteExpense(exp.id)} className="text-rose-300 hover:text-rose-500 p-1"><Trash2 size={16} /></button>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+
+                                            {/* General Expense History (Submitted) */}
+                                            {expenseType === 'general' && history.length > 0 && (
+                                                <div className="border-t border-stone-100 pt-4">
+                                                    <h4 className="text-xs font-bold text-stone-400 mb-3 uppercase tracking-wider">已送出 / 歷史紀錄</h4>
+                                                    <div className="space-y-2 opacity-75">
+                                                        {history.map(exp => (
+                                                            <div key={exp.id} className="flex items-center justify-between p-3 bg-stone-50 rounded-xl border border-stone-100">
+                                                                <div className="flex items-center gap-3">
+                                                                    <div className="p-1.5 bg-white rounded text-stone-400">{getCategoryIcon(exp.category)}</div>
+                                                                    <div>
+                                                                        <div className="font-bold text-stone-600 text-xs">{exp.description}</div>
+                                                                        <div className="text-[10px] text-stone-400">{getTripStatus(0) /* Reuse logic or show badge */}
+                                                                            <span className={`ml-2 px-1.5 py-0.5 rounded text-[10px] ${exp.status === 'approved' ? 'bg-emerald-100 text-emerald-600' : 'bg-blue-50 text-blue-500'}`}>
+                                                                                {exp.status}
+                                                                            </span>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                                <span className="font-mono text-xs font-bold text-stone-500">{exp.currency} {exp.amount.toLocaleString()}</span>
+                                                            </div>
+                                                        ))}
                                                     </div>
                                                 </div>
-                                                <div className="flex items-center gap-4">
-                                                    <span className="font-mono font-bold text-stone-800">{exp.currency} {exp.amount.toLocaleString()}</span>
-                                                    {exp.status !== 'cancelled' && (() => {
-                                                        const status = expenseType === 'trip' && selectedTrip ? getTripStatus(selectedTrip.id) : getTripStatus(0);
-
-                                                        // Lock Logic:
-                                                        // 1. If Trip: Lock if whole trip is Approved/In Progress.
-                                                        // 2. If General: Lock only if THIS item is Approved. Allow deleting 'pending' (drafts) or 'returned'.
-                                                        let isLocked = false;
-                                                        if (expenseType === 'trip') {
-                                                            isLocked = (status.label === '核准中' || status.label === '核銷完成');
-                                                        } else {
-                                                            // General: Only lock if this specific item is passed the drafting stage
-                                                            if (exp.status === 'pending_dept' || exp.status === 'pending_gm' || exp.status === 'approved') {
-                                                                isLocked = true;
-                                                            }
-                                                        }
-
-                                                        return !isLocked && (
-                                                            <button onClick={() => handleDeleteExpense(exp.id)} className="text-rose-300 hover:text-rose-500 p-1"><Trash2 size={16} /></button>
-                                                        );
-                                                    })()}
-                                                    {exp.status === 'cancelled' && <span className="text-xs text-stone-400 font-bold">已刪除</span>}
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
+                                            )}
+                                        </div>
+                                    );
+                                })()}
                             </div>
 
                             <div className="p-4 border-t border-stone-100 bg-stone-50 text-right">
