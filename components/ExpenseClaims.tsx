@@ -673,7 +673,7 @@ const ExpenseClaims: React.FC = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {tripExpenses.filter(e => e.status !== 'cancelled').map(exp => (
+                            {tripExpenses?.filter(e => e.status !== 'cancelled').map(exp => (
                                 <tr key={exp.id}>
                                     <td className="border border-black p-2 text-center">{exp.claim_date}</td>
                                     <td className="border border-black p-2 text-center">{exp.category === 'Travel' ? '交通' : exp.category === 'Meal' ? '誤餐' : exp.category === 'Fuel' ? '加油' : exp.category}</td>
