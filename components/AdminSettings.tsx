@@ -1,14 +1,19 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { getEmployees, seedDemoData, getSystemStats, getAdminExpenseClaims, updateAdminExpenseStatus, getAdminHistoryExpenseClaims } from '../services/supabaseService';
-import { Employee, ExpenseClaim } from '../types';
-import { Users, Database, ShieldAlert, RefreshCw, Activity, Layout, Download, Palette, FileJson, CheckCircle, Receipt, Printer, Check, XCircle } from 'lucide-react';
+import { getEmployees, seedDemoData, getSystemStats, getAdminExpenseClaims, updateAdminExpenseStatus, getAdminHistoryExpenseClaims, getLeaveRequests, updateLeaveRequestDetails } from '../services/supabaseService';
+import { Employee, ExpenseClaim, LeaveRequest, RequestStatus } from '../types';
+import { Users, Database, ShieldAlert, RefreshCw, Activity, Layout, Download, Palette, FileJson, CheckCircle, Receipt, Printer, Check, XCircle, Edit3, Save, X } from 'lucide-react';
 
 const AdminSettings: React.FC = () => {
     const [employees, setEmployees] = useState<Employee[]>([]);
     const [stats, setStats] = useState<any>(null);
     const [loading, setLoading] = useState(false);
     const [seeding, setSeeding] = useState(false);
-    const [activeTab, setActiveTab] = useState<'system' | 'expenses'>('system');
+    const [activeTab, setActiveTab] = useState<'system' | 'expenses' | 'leaves'>('system');
+
+    // Leave Correction State
+    const [allLeaves, setAllLeaves] = useState<LeaveRequest[]>([]);
+    const [editingLeave, setEditingLeave] = useState<LeaveRequest | null>(null);
+    const [editForm, setEditForm] = useState<{ start: string, end: string, status: RequestStatus }>({ start: '', end: '', status: 'pending' });
 
     // Expense Admin State
     const [pendingExpenses, setPendingExpenses] = useState<ExpenseClaim[]>([]);
@@ -35,6 +40,9 @@ const AdminSettings: React.FC = () => {
 
             const history = await getAdminHistoryExpenseClaims(startDate, endDate);
             setHistoryExpenses(history);
+
+            const leaves = await getLeaveRequests();
+            setAllLeaves(leaves);
         } catch (e) {
             console.error(e);
         } finally {
@@ -156,9 +164,143 @@ const AdminSettings: React.FC = () => {
                 </div>
                 <div className="flex bg-stone-100 p-1 rounded-xl">
                     <button onClick={() => setActiveTab('system')} className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'system' ? 'bg-white shadow text-stone-800' : 'text-stone-500 hover:text-stone-700'}`}>系統設定</button>
-                    <button onClick={() => setActiveTab('expenses')} className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'expenses' ? 'bg-white shadow text-stone-800' : 'text-stone-500 hover:text-stone-700'}`}>費用審核 ({pendingExpenses.length})</button>
+                    <button onClick={() => setActiveTab('expenses')} className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'expenses' ? 'bg-white shadow text-stone-800' : 'text-stone-500 hover:text-stone-700'}`}>費用審核</button>
+                    <button onClick={() => setActiveTab('leaves')} className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'leaves' ? 'bg-white shadow text-stone-800' : 'text-stone-500 hover:text-stone-700'}`}>假單維護</button>
                 </div>
             </div>
+
+            {/* LEAVE CORRECTION TAB */}
+            {activeTab === 'leaves' && (
+                <div className="bg-white rounded-2xl shadow-sm border border-stone-200 overflow-hidden">
+                    <div className="px-6 py-4 border-b border-stone-200 bg-stone-50">
+                        <h3 className="font-bold text-stone-800 flex items-center gap-2">
+                            <Edit3 size={20} className="text-accent" /> 員工假單/公出維護 (Admin Only)
+                        </h3>
+                    </div>
+                    <div className="overflow-x-auto">
+                        <table className="min-w-full divide-y divide-stone-200 text-sm">
+                            <thead className="bg-stone-100">
+                                <tr>
+                                    <th className="px-4 py-3 text-left">單號</th>
+                                    <th className="px-4 py-3 text-left">姓名</th>
+                                    <th className="px-4 py-3 text-left">類別</th>
+                                    <th className="px-4 py-3 text-left">時間</th>
+                                    <th className="px-4 py-3 text-left">狀態</th>
+                                    <th className="px-4 py-3 text-right">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-stone-100">
+                                {allLeaves.map(req => (
+                                    <tr key={req.id} className="hover:bg-stone-50">
+                                        <td className="px-4 py-3 font-mono text-stone-500">#{req.id}</td>
+                                        <td className="px-4 py-3 font-bold text-stone-700">{(req as any).employees?.full_name}</td>
+                                        <td className="px-4 py-3">{req.is_overtime ? '加班' : req.leave_type}</td>
+                                        <td className="px-4 py-3 font-mono text-stone-600">
+                                            {new Date(req.start_time).toLocaleString()} <br /> ~ {new Date(req.end_time).toLocaleString()}
+                                        </td>
+                                        <td className="px-4 py-3">
+                                            <span className={`px-2 py-0.5 rounded text-xs border ${req.status === 'approved' ? 'bg-emerald-50 text-emerald-600 border-emerald-200' :
+                                                    req.status === 'rejected' ? 'bg-rose-50 text-rose-600 border-rose-200' :
+                                                        'bg-amber-50 text-amber-600 border-amber-200'
+                                                }`}>{req.status}</span>
+                                        </td>
+                                        <td className="px-4 py-3 text-right">
+                                            <button
+                                                onClick={() => {
+                                                    setEditingLeave(req);
+                                                    setEditForm({
+                                                        start: new Date(req.start_time).toISOString().slice(0, 16),
+                                                        end: new Date(req.end_time).toISOString().slice(0, 16),
+                                                        status: req.status
+                                                    });
+                                                }}
+                                                className="text-accent hover:bg-orange-50 p-1.5 rounded transition-colors"
+                                            >
+                                                <Edit3 size={16} />
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {/* Edit Modal */}
+                    {editingLeave && (
+                        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                            <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl animate-fade-in">
+                                <div className="flex justify-between items-center mb-6">
+                                    <h3 className="text-xl font-bold text-stone-800">修改假單 #{editingLeave.id}</h3>
+                                    <button onClick={() => setEditingLeave(null)} className="text-stone-400 hover:text-stone-600"><X size={24} /></button>
+                                </div>
+
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="block text-xs font-bold text-stone-500 mb-1">開始時間</label>
+                                        <input
+                                            type="datetime-local"
+                                            value={editForm.start}
+                                            onChange={e => setEditForm({ ...editForm, start: e.target.value })}
+                                            className="w-full border-stone-300 rounded-lg"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-stone-500 mb-1">結束時間</label>
+                                        <input
+                                            type="datetime-local"
+                                            value={editForm.end}
+                                            onChange={e => setEditForm({ ...editForm, end: e.target.value })}
+                                            className="w-full border-stone-300 rounded-lg"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-stone-500 mb-1">狀態</label>
+                                        <select
+                                            value={editForm.status}
+                                            onChange={e => setEditForm({ ...editForm, status: e.target.value as RequestStatus })}
+                                            className="w-full border-stone-300 rounded-lg"
+                                        >
+                                            <option value="pending_dept">Pending Dept</option>
+                                            <option value="pending_gm">Pending GM</option>
+                                            <option value="approved">Approved</option>
+                                            <option value="rejected">Rejected</option>
+                                            <option value="cancelled">Cancelled</option>
+                                        </select>
+                                    </div>
+
+                                    <div className="pt-4 flex gap-3">
+                                        <button onClick={() => setEditingLeave(null)} className="flex-1 py-2 rounded-xl bg-stone-100 font-bold text-stone-600">取消</button>
+                                        <button
+                                            onClick={async () => {
+                                                if (!confirm("確定要修改此假單嗎？這將會留下記錄。")) return;
+                                                try {
+                                                    await updateLeaveRequestDetails(
+                                                        editingLeave.id,
+                                                        {
+                                                            start_time: new Date(editForm.start).toISOString(),
+                                                            end_time: new Date(editForm.end).toISOString(),
+                                                            status: editForm.status
+                                                        },
+                                                        'Admin' // In real app, get current user name
+                                                    );
+                                                    alert("已更新");
+                                                    setEditingLeave(null);
+                                                    fetchData();
+                                                } catch (e: any) {
+                                                    alert(e.message);
+                                                }
+                                            }}
+                                            className="flex-1 py-2 rounded-xl bg-accent text-white font-bold"
+                                        >
+                                            儲存變更
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            )}
 
             {/* EXPENSE TAB */}
             {activeTab === 'expenses' && (

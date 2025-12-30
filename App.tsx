@@ -7,6 +7,7 @@ import LeaveRequestPage from './components/LeaveRequest';
 import VehicleMgmt from './components/VehicleMgmt';
 import ExpenseClaims from './components/ExpenseClaims';
 import VisitorLog from './components/VisitorLog';
+import AssetManagement from './components/AssetManagement';
 import AdminSettings from './components/AdminSettings';
 import Login from './components/Login';
 import { supabase } from './supabaseClient';
@@ -46,7 +47,7 @@ const App: React.FC = () => {
     <HashRouter>
       <Routes>
         <Route path="/login" element={<Login />} />
-        
+
         {/* Protected Routes */}
         <Route path="/" element={
           <ProtectedRoute>
@@ -56,6 +57,11 @@ const App: React.FC = () => {
         <Route path="/attendance" element={
           <ProtectedRoute>
             <Layout><LeaveRequestPage /></Layout>
+          </ProtectedRoute>
+        } />
+        <Route path="/assets" element={
+          <ProtectedRoute>
+            <Layout><AssetManagement /></Layout>
           </ProtectedRoute>
         } />
         <Route path="/vehicles" element={
@@ -78,7 +84,7 @@ const App: React.FC = () => {
             <Layout><AdminSettings /></Layout>
           </ProtectedRoute>
         } />
-        
+
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </HashRouter>

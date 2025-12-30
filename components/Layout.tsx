@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, CalendarDays, Car, Receipt, UserCircle, LogOut, ShieldCheck, CloudSun, Clock, Users, RefreshCw, Settings, Menu, X } from 'lucide-react';
+import { LayoutDashboard, CalendarDays, Car, Receipt, UserCircle, LogOut, ShieldCheck, CloudSun, Clock, Users, RefreshCw, Settings, Menu, X, Package } from 'lucide-react';
 import { getCurrentEmployee, signOut } from '../services/supabaseService';
 import { Employee } from '../types';
 
@@ -136,7 +136,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                   }`}
               >
                 <Icon size={20} className={isActive ? 'text-accent' : 'text-stone-400 group-hover:text-stone-600'} />
-                <span className="tracking-wide">{item.name === '動態' ? '人員動態看板' : item.name === '差勤' ? '差勤與請假' : item.name === '車輛' ? '行政資源管理' : item.name === '報銷' ? '費用報銷申請' : item.name === '訪客' ? '來賓訪客登記' : item.name === '管理' ? '系統管理' : item.name}</span>
+                <span className="tracking-wide">{item.name === '動態' ? '人員動態看板' : item.name === '差勤' ? '差勤與請假' : item.name === '車輛' ? '行政資源管理' : item.name === '報銷' ? '費用報銷申請' : item.name === '訪客' ? '來賓訪客登記' : item.name === '管理' ? '系統管理' : item.name === '資產' ? '固定資產管理' : item.name}</span>
               </Link>
             );
           })}

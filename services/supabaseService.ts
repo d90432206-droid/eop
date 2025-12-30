@@ -1,6 +1,6 @@
 
 import { supabase } from '../supabaseClient';
-import { Employee, LeaveRequest, Vehicle, VehicleBooking, ExpenseClaim, EmployeeStatus, VehicleLog, Visitor, RequestStatus, RequestLog } from '../types';
+import { Employee, LeaveRequest, Vehicle, VehicleBooking, ExpenseClaim, EmployeeStatus, VehicleLog, Visitor, RequestStatus, RequestLog, Asset } from '../types';
 
 /**
  * Helper for Error Handling
@@ -687,5 +687,81 @@ export const cancelVisitor = async (id: number): Promise<void> => {
     .from('visitors')
     .update({ status: 'cancelled' })
     .eq('id', id);
+  if (error) handleError(error);
+};
+
+// --- Assets ---
+
+export const getAssets = async (): Promise<Asset[]> => {
+  const { data, error } = await supabase
+    .from('assets')
+    .select('*')
+    .order('purchase_date', { ascending: false });
+
+  if (error) return [];
+  return data as Asset[];
+};
+
+export const createAsset = async (asset: Omit<Asset, 'id' | 'created_at'>): Promise<void> => {
+  const { error } = await supabase
+    .from('assets')
+    .insert(asset);
+  if (error) handleError(error);
+};
+
+export const updateAsset = async (id: number, updates: Partial<Asset>): Promise<void> => {
+  const { error } = await supabase
+    .from('assets')
+    .update(updates)
+    .eq('id', id);
+  if (error) handleError(error);
+};
+
+export const deleteAsset = async (id: number): Promise<void> => {
+  const { error } = await supabase
+    .from('assets')
+    .delete()
+    .eq('id', id);
+  if (error) handleError(error);
+};
+
+// --- Admin Corrections ---
+
+export const updateLeaveRequestDetails = async (
+  id: number,
+  updates: { start_time?: string, end_time?: string, status?: RequestStatus },
+  adminName: string
+): Promise<void> => {
+
+  // 1. Fetch current logs
+  const { data: current, error: fetchError } = await supabase
+    .from('leave_requests')
+    .select('logs')
+    .eq('id', id)
+    .single();
+
+  if (fetchError) handleError(fetchError);
+
+  const currentLogs = current?.logs || [];
+
+  // 2. Append Admin Log
+  const newLog: RequestLog = {
+    action: '管理者修正',
+    actor_name: adminName,
+    timestamp: new Date().toISOString(),
+    comment: `修正內容: ${Object.keys(updates).join(', ')}`
+  };
+
+  currentLogs.push(newLog);
+
+  // 3. Update
+  const { error } = await supabase
+    .from('leave_requests')
+    .update({
+      ...updates,
+      logs: currentLogs
+    })
+    .eq('id', id);
+
   if (error) handleError(error);
 };
