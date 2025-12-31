@@ -136,23 +136,26 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             </div>
 
             {/* Character Animation */}
-            <div className="mt-4 border-t border-stone-200/50 pt-2 flex justify-center h-12">
-              <div className="animate-character-cycle text-3xl select-none">
-                🏃
+            {/* Character Animation - Mario Sprite */}
+            <div className="mt-4 border-t border-stone-200/50 pt-4 flex justify-center overflow-hidden">
+              <div className="mario-container">
+                <div className="mario-rotate"></div>
               </div>
               <style>{`
-                 @keyframes characterCycle {
-                   0%, 25% { content: "🏃"; opacity: 1; transform: translateX(-10px); }
-                   26%, 50% { content: "😓"; opacity: 1; transform: translateX(0px); }
-                   51%, 75% { content: "💨"; opacity: 1; transform: translateX(0px); }
-                   76%, 100% { content: "🚶"; opacity: 1; transform: translateX(10px); }
+                 .mario-container {
+                    width: 100%;
+                    display: flex;
+                    justify-content: center;
                  }
-                 .animate-character-cycle::after {
-                    content: "🏃";
-                    animation: characterCycle 4s infinite steps(1);
+                 .mario-rotate {
+                    background: url('https://martindrapeau.github.io/backbone-game-engine/docs/super-mario-sprite.png') 0 0 no-repeat; 
+                    width: 32px;
+                    height: 68px;
+                    animation: rotate-clockwise 6s steps(21) infinite;
                  }
-                 .animate-character-cycle {
-                    font-size: 2rem;
+                 @keyframes rotate-clockwise {  
+                    0% { background-position: 0 0; } 
+                    100% { background-position: -672px 0; } 
                  }
                `}</style>
             </div>
