@@ -1166,7 +1166,7 @@ const LeaveRequestPage: React.FC = () => {
                                         </tr>
                                     </thead>
                                     <tbody className="bg-white divide-y divide-stone-100">
-                                        {displayHistory.length === 0 ? <tr><td colSpan={4} className="p-8 text-center text-stone-400">查無紀錄</td></tr> : displayHistory.map((req) => {
+                                        {displayHistory.filter(req => !req.reason?.startsWith('[GENERAL]')).length === 0 ? <tr><td colSpan={4} className="p-8 text-center text-stone-400">查無紀錄</td></tr> : displayHistory.filter(req => !req.reason?.startsWith('[GENERAL]')).map((req) => {
                                             const cancelType = getCancelType(req);
                                             return (
                                                 <tr key={req.id} className="hover:bg-stone-50 transition-colors group">
