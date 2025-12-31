@@ -281,13 +281,24 @@ const ExpenseClaims: React.FC = () => {
 
     const handleCreateGeneralVoucher = async () => {
         if (!currentEmp) return;
+
+        // Prevent Spam / Database Overload Logic
+        const pendingCount = generalVouchers.filter(v => v.status === 'pending').length;
+        if (pendingCount >= 5) {
+            alert("⚠️ 您有過多未送出的憑單，請先完成或刪除現有的憑單後再新增 (上限 5 筆)。");
+            return;
+        }
+
         try {
             const newVoucher = await createGeneralVoucher(currentEmp.id);
             if (newVoucher) {
                 setGeneralVouchers([newVoucher, ...generalVouchers]);
                 // Removed auto-switch
             }
-        } catch (e) { console.error(e); }
+        } catch (e: any) {
+            console.error(e);
+            alert("新增失敗: " + e.message);
+        }
     }
 
     const handleDeleteVoucher = async (voucherId: number, e: React.MouseEvent) => {

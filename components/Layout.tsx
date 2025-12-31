@@ -134,6 +134,28 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 <span className="text-[10px] font-bold uppercase tracking-widest text-stone-400 mt-1">Taipei</span>
               </div>
             </div>
+
+            {/* Character Animation */}
+            <div className="mt-4 border-t border-stone-200/50 pt-2 flex justify-center h-12">
+              <div className="animate-character-cycle text-3xl select-none">
+                🏃
+              </div>
+              <style>{`
+                 @keyframes characterCycle {
+                   0%, 25% { content: "🏃"; opacity: 1; transform: translateX(-10px); }
+                   26%, 50% { content: "😓"; opacity: 1; transform: translateX(0px); }
+                   51%, 75% { content: "💨"; opacity: 1; transform: translateX(0px); }
+                   76%, 100% { content: "🚶"; opacity: 1; transform: translateX(10px); }
+                 }
+                 .animate-character-cycle::after {
+                    content: "🏃";
+                    animation: characterCycle 4s infinite steps(1);
+                 }
+                 .animate-character-cycle {
+                    font-size: 2rem;
+                 }
+               `}</style>
+            </div>
           </div>
         </div>
 

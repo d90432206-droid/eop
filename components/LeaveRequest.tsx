@@ -767,17 +767,18 @@ const LeaveRequestPage: React.FC = () => {
         const needsGM = duration > 24 || (req as any).employees?.job_title?.includes('經理') || req.approval_level === 'general_manager';
         const steps = [{ name: '申請', status: 'done' }, { name: '部門主管', status: req.status === 'pending_dept' ? 'current' : (req.status === 'approved' || req.status === 'pending_gm') ? 'done' : 'waiting' }];
         if (needsGM) { steps.push({ name: '總經理', status: req.status === 'pending_gm' ? 'current' : req.status === 'approved' ? 'done' : 'waiting' }); }
-        if (req.status === 'rejected') return <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-600 border border-rose-100">🚫 已駁回</span>;
-        if (req.status === 'cancelled') return <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-stone-100 text-stone-500 border border-stone-200">✖ 已取消</span>;
+        if (req.status === 'rejected') return <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-bold bg-rose-50 text-rose-600 border border-rose-100">🚫 已駁回</span>;
+        if (req.status === 'cancelled') return <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-bold bg-stone-100 text-stone-500 border border-stone-200">✖ 已取消</span>;
         return (
-            <div className="flex items-center gap-1 mt-1">
+            <div className="flex items-center gap-1 mt-1 justify-center bg-stone-50 px-3 py-2 rounded-xl border border-stone-100 w-fit mx-auto">
                 {steps.map((step, idx) => (
                     <div key={idx} className="flex items-center">
-                        <div className={`w-2 h-2 rounded-full ${step.status === 'done' ? 'bg-emerald-500' : step.status === 'current' ? 'bg-amber-500 animate-pulse' : 'bg-stone-300'}`} title={step.name}></div>
-                        {idx < steps.length - 1 && <div className={`w-3 h-0.5 ${step.status === 'done' ? 'bg-emerald-300' : 'bg-stone-200'}`}></div>}
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 transition-all ${step.status === 'done' ? 'bg-emerald-500 border-emerald-500 text-white' : step.status === 'current' ? 'bg-amber-100 border-amber-500 text-amber-700 animate-pulse' : 'bg-stone-200 border-stone-300 text-stone-400'}`} title={step.name}>
+                            {step.status === 'done' ? <Check size={16} strokeWidth={3} /> : <span className="text-xs font-bold">{idx + 1}</span>}
+                        </div>
+                        {idx < steps.length - 1 && <div className={`w-8 h-1 ${step.status === 'done' ? 'bg-emerald-400' : 'bg-stone-300'}`}></div>}
                     </div>
                 ))}
-                <span className="text-[10px] text-stone-400 ml-1">{req.status === 'approved' ? '完成' : '進行中'}</span>
             </div>
         );
     };
@@ -1158,10 +1159,10 @@ const LeaveRequestPage: React.FC = () => {
                                 <table className="min-w-full divide-y divide-stone-200">
                                     <thead className="bg-stone-50 border-b border-stone-200">
                                         <tr>
-                                            <th className="px-6 py-4 text-left text-xs font-bold text-stone-500 uppercase tracking-wider">申請人/類別</th>
-                                            <th className="px-6 py-4 text-left text-xs font-bold text-stone-500 uppercase tracking-wider">時間與事由</th>
-                                            <th className="px-6 py-4 text-left text-xs font-bold text-stone-500 uppercase tracking-wider">簽核進度</th>
-                                            <th className="px-6 py-4 text-right text-xs font-bold text-stone-500 uppercase tracking-wider">操作</th>
+                                            <th className="px-6 py-4 text-center text-sm font-bold text-stone-600 uppercase tracking-wider">申請人/類別</th>
+                                            <th className="px-6 py-4 text-center text-sm font-bold text-stone-600 uppercase tracking-wider">時間與事由</th>
+                                            <th className="px-6 py-4 text-center text-sm font-bold text-stone-600 uppercase tracking-wider">簽核進度</th>
+                                            <th className="px-6 py-4 text-center text-sm font-bold text-stone-600 uppercase tracking-wider">操作</th>
                                         </tr>
                                     </thead>
                                     <tbody className="bg-white divide-y divide-stone-100">
@@ -1169,47 +1170,51 @@ const LeaveRequestPage: React.FC = () => {
                                             const cancelType = getCancelType(req);
                                             return (
                                                 <tr key={req.id} className="hover:bg-stone-50 transition-colors group">
-                                                    <td className="px-6 py-4 whitespace-nowrap">
-                                                        <div className="font-bold text-stone-800">{(req as any).employees?.full_name}</div>
-                                                        <span className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold mt-1.5 border ${req.is_overtime ? 'bg-purple-50 text-purple-700 border-purple-100' : 'bg-stone-50 text-stone-600 border-stone-100'}`}>
+                                                    <td className="px-6 py-4 text-center whitespace-nowrap">
+                                                        <div className="font-bold text-stone-800 text-base">{(req as any).employees?.full_name}</div>
+                                                        <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold mt-1.5 border ${req.is_overtime ? 'bg-purple-50 text-purple-700 border-purple-100' : 'bg-stone-50 text-stone-600 border-stone-100'}`}>
                                                             {req.is_overtime ? '加班' : req.leave_type === 'business' ? '公出' : req.leave_type === 'annual' ? '特休' : '請假'}
                                                         </span>
                                                     </td>
-                                                    <td className="px-6 py-4">
-                                                        <div className="text-sm text-stone-600 flex items-center gap-1.5 whitespace-nowrap font-medium">
-                                                            <Calendar size={14} className="text-stone-400" /> {new Date(req.start_time).toLocaleString([], { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false })}
+                                                    <td className="px-6 py-4 text-center">
+                                                        <div className="text-sm text-stone-600 flex items-center justify-center gap-1.5 whitespace-nowrap font-medium">
+                                                            <Calendar size={16} className="text-stone-400" /> {new Date(req.start_time).toLocaleString([], { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false })}
                                                             <span className="text-stone-300">→</span> {new Date(req.end_time).toLocaleString([], { hour: '2-digit', minute: '2-digit', hour12: false })}
                                                         </div>
-                                                        <div className="text-xs text-stone-500 mt-1 truncate max-w-[200px]" title={req.reason || ''}>{req.reason}</div>
+                                                        <div className="text-sm text-stone-500 mt-1 truncate max-w-[200px] mx-auto" title={req.reason || ''}>{req.reason}</div>
                                                     </td>
                                                     <td className="px-6 py-4">
-                                                        {renderWorkflow(req)}
-                                                        <div className="mt-2 space-y-1 opacity-60 group-hover:opacity-100 transition-opacity">
+                                                        <div className="flex justify-center">
+                                                            {renderWorkflow(req)}
+                                                        </div>
+                                                        <div className="mt-2 space-y-1 opacity-60 group-hover:opacity-100 transition-opacity flex flex-col items-center">
                                                             {req.logs?.slice(-1).map((log, i) => (
-                                                                <div key={i} className="text-[10px] text-stone-400 flex items-center gap-1 truncate max-w-[200px]">
-                                                                    <History size={10} />
+                                                                <div key={i} className="text-xs text-stone-400 flex items-center gap-1 truncate max-w-[200px]">
+                                                                    <History size={12} />
                                                                     <span>{log.actor_name} {log.action}</span>
                                                                 </div>
                                                             ))}
                                                         </div>
                                                     </td>
-                                                    <td className="px-6 py-4 text-right whitespace-nowrap">
-                                                        {cancelType && (
-                                                            <button
-                                                                onClick={() => handleCancel(req.id)}
-                                                                className={`text-xs font-bold flex items-center gap-1 ml-auto transition-all px-3 py-1.5 rounded-full border ${cancelType === 'force' ? 'border-rose-300 text-rose-500 hover:bg-rose-50 hover:text-rose-600' : 'text-stone-400 border-stone-200 hover:text-stone-600 hover:bg-stone-50 hover:border-stone-300'}`}
-                                                            >
-                                                                <XCircle size={14} /> {cancelType === 'force' ? '強制取消' : '取消'}
-                                                            </button>
-                                                        )}
-                                                        {req.is_overtime && ( // Print Button
-                                                            <button
-                                                                onClick={() => handlePrint(req)}
-                                                                className="text-xs font-bold flex items-center gap-1 ml-2 transition-all px-3 py-1.5 rounded-full border border-stone-200 text-stone-500 hover:text-stone-700 hover:bg-stone-50"
-                                                            >
-                                                                <Printer size={14} /> 列印憑單
-                                                            </button>
-                                                        )}
+                                                    <td className="px-6 py-4 whitespace-nowrap">
+                                                        <div className="flex items-center justify-center gap-2">
+                                                            {cancelType && (
+                                                                <button
+                                                                    onClick={() => handleCancel(req.id)}
+                                                                    className={`text-sm font-bold flex items-center gap-1 transition-all px-4 py-2 rounded-lg border ${cancelType === 'force' ? 'border-rose-300 text-rose-500 hover:bg-rose-50 hover:text-rose-600' : 'text-stone-400 border-stone-200 hover:text-stone-600 hover:bg-stone-50 hover:border-stone-300'}`}
+                                                                >
+                                                                    <XCircle size={16} /> {cancelType === 'force' ? '強制取消' : '取消'}
+                                                                </button>
+                                                            )}
+                                                            {req.is_overtime && ( // Print Button
+                                                                <button
+                                                                    onClick={() => handlePrint(req)}
+                                                                    className="text-sm font-bold flex items-center gap-1 transition-all px-4 py-2 rounded-lg border border-stone-200 text-stone-500 hover:text-stone-700 hover:bg-stone-50"
+                                                                >
+                                                                    <Printer size={16} /> 列印
+                                                                </button>
+                                                            )}
+                                                        </div>
                                                     </td>
                                                 </tr>
                                             )
