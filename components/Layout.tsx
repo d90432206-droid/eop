@@ -1,77 +1,172 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-/* New Import Line */
 import { LayoutDashboard, CalendarDays, Car, Receipt, UserCircle, LogOut, ShieldCheck, CloudSun, Clock, Users, RefreshCw, Settings, Menu, X, Package, Sun, Cloud, CloudRain, CloudLightning, Snowflake } from 'lucide-react';
+import { getCurrentEmployee, signOut } from '../services/supabaseService';
+import { Employee } from '../types';
 
-/* Inside Component */
-const [weatherCode, setWeatherCode] = useState<number | null>(null);
+interface LayoutProps {
+  children: React.ReactNode;
+}
 
-/* Updated fetchWeather */
-const fetchWeather = async () => {
-  try {
-    const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=25.0330&longitude=121.5654&current_weather=true');
-    const data = await res.json();
-    if (data.current_weather) {
-      setWeatherTemp(data.current_weather.temperature);
-      setWeatherCode(data.current_weather.weathercode);
+const Layout: React.FC<LayoutProps> = ({ children }) => {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [currentUser, setCurrentUser] = useState<Employee | null>(null);
+  const [isProfileLoading, setIsProfileLoading] = useState(true);
+  const [currentTime, setCurrentTime] = useState(new Date());
+  const [weatherTemp, setWeatherTemp] = useState<number | null>(null);
+  const [weatherCode, setWeatherCode] = useState<number | null>(null); // Added weatherCode
+
+  // Mobile Sidebar State
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  const fetchUser = async () => {
+    setIsProfileLoading(true);
+    try {
+      const emp = await getCurrentEmployee();
+      setCurrentUser(emp);
+    } catch (e) {
+      console.error("Layout fetch user error", e);
+    } finally {
+      setIsProfileLoading(false);
     }
-  } catch (e) {
-    console.warn('Weather fetch failed', e);
+  };
+
+  useEffect(() => {
+    fetchUser();
+
+    // Clock Interval
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+
+    // Weather API (Open-Meteo for Taipei)
+    const fetchWeather = async () => {
+      try {
+        const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=25.0330&longitude=121.5654&current_weather=true');
+        const data = await res.json();
+        if (data.current_weather) {
+          setWeatherTemp(data.current_weather.temperature);
+          setWeatherCode(data.current_weather.weathercode); // Save weather code
+        }
+      } catch (e) {
+        console.warn('Weather fetch failed', e);
+      }
+    };
+    fetchWeather();
+
+    return () => clearInterval(timer);
+  }, [location.pathname]);
+
+  const handleLogout = async () => {
+    await signOut();
+    navigate('/login');
+  };
+
+  const navItems = [
+    { name: '動態', path: '/', icon: LayoutDashboard },
+    { name: '差勤', path: '/attendance', icon: CalendarDays },
+    { name: '車輛', path: '/vehicles', icon: Car },
+    { name: '報銷', path: '/expenses', icon: Receipt },
+    { name: '訪客', path: '/visitors', icon: Users },
+    { name: '資產', path: '/assets', icon: Package },
+  ];
+
+  if (currentUser?.role === 'admin') {
+    navItems.push({ name: '管理', path: '/admin', icon: Settings });
   }
-};
 
-/* Helper to render animated icon */
-const renderWeatherIcon = () => {
-  if (weatherCode === null) return <CloudSun size={32} className="text-amber-500" />;
+  // Helper to render animated icon
+  const renderWeatherIcon = () => {
+    if (weatherCode === null) return <CloudSun size={32} className="text-amber-500" />;
 
-  // WMO Weather interpretation codes (WW)
-  // 0: Clear sky
-  // 1, 2, 3: Cloudy
-  // 45, 48: Fog
-  // 51, 53, 55, 56, 57: Drizzle
-  // 61, 63, 65, 66, 67: Rain
-  // 71, 73, 75, 77: Snow
-  // 80, 81, 82: Rain showers
-  // 85, 86: Snow showers
-  // 95, 96, 99: Thunderstorm
+    // WMO Weather interpretation codes (WW)
+    const iconClass = "transition-transform duration-500 group-hover:scale-110 drop-shadow-sm";
 
-  const iconClass = "transition-transform duration-500 group-hover:scale-110 drop-shadow-sm";
+    if (weatherCode === 0) { // Clear sky
+      return <Sun size={32} className={`${iconClass} text-amber-500 animate-[spin_10s_linear_infinite]`} />;
+    } else if ([1, 2, 3, 45, 48].includes(weatherCode)) { // Cloudy / Fog
+      return <Cloud size={32} className={`${iconClass} text-stone-400 animate-[pulse_4s_ease-in-out_infinite]`} />;
+    } else if ([51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 80, 81, 82].includes(weatherCode)) { // Rain / Drizzle
+      return (
+        <div className="relative">
+          <CloudRain size={32} className={`${iconClass} text-sky-500`} />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 w-full h-full flex justify-center pointer-events-none">
+            <span className="animate-[rain_1s_infinite] text-sky-400 text-xs absolute top-2 left-1">💧</span>
+            <span className="animate-[rain_1.5s_infinite] text-sky-400 text-xs absolute top-3 right-1">💧</span>
+          </div>
+        </div>
+      );
+    } else if ([71, 73, 75, 77, 85, 86].includes(weatherCode)) { // Snow
+      return <Snowflake size={32} className={`${iconClass} text-sky-200 animate-[spin_3s_linear_infinite]`} />;
+    } else if ([95, 96, 99].includes(weatherCode)) { // Thunderstorm
+      return <CloudLightning size={32} className={`${iconClass} text-purple-600 animate-[bounce_0.5s_infinite]`} />;
+    }
 
-  if (weatherCode === 0) {
-    return <Sun size={32} className={`${iconClass} text-amber-500 animate-[spin_10s_linear_infinite]`} />;
-  } else if ([1, 2, 3, 45, 48].includes(weatherCode)) {
-    return <Cloud size={32} className={`${iconClass} text-stone-400 animate-[pulse_4s_ease-in-out_infinite]`} />;
-  } else if ([51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 80, 81, 82].includes(weatherCode)) {
-    return (
-      <div className="relative">
-        <CloudRain size={32} className={`${iconClass} text-sky-500`} />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 w-full h-full flex justify-center pointer-events-none">
-          <span className="animate-[rain_1s_infinite] text-sky-400 text-xs absolute top-2 left-1">💧</span>
-          <span className="animate-[rain_1.5s_infinite] text-sky-400 text-xs absolute top-3 right-1">💧</span>
+    return <CloudSun size={32} className={`${iconClass} text-amber-500`} />;
+  };
+
+  return (
+    <div className="flex h-screen bg-[#fafaf9] font-sans overflow-hidden">
+
+      {/* Mobile Header (Simplified) */}
+      <div className="md:hidden fixed top-0 left-0 right-0 h-14 bg-white text-stone-800 z-30 flex items-center justify-between px-4 shadow-sm border-b border-stone-200">
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 bg-accent rounded-lg flex items-center justify-center text-white text-xs shadow-sm">EO</div>
+          <h1 className="text-lg font-bold tracking-tight text-stone-800">EnterpriseOps</h1>
+        </div>
+        <div className="flex items-center gap-2">
+          {currentUser && (
+            <button onClick={handleLogout} className="text-stone-400 hover:text-rose-500 transition-colors">
+              <LogOut size={20} />
+            </button>
+          )}
         </div>
       </div>
-    );
-  } else if ([71, 73, 75, 77, 85, 86].includes(weatherCode)) {
-    return <Snowflake size={32} className={`${iconClass} text-sky-200 animate-[spin_3s_linear_infinite]`} />;
-  } else if ([95, 96, 99].includes(weatherCode)) {
-    return <CloudLightning size={32} className={`${iconClass} text-purple-600 animate-[bounce_0.5s_infinite]`} />;
-  }
 
-  return <CloudSun size={32} className={`${iconClass} text-amber-500`} />;
-};
+      {/* Sidebar - Desktop / Tablet Only */}
+      <aside className={`
+          hidden md:flex
+          relative top-0 left-0 h-full w-64 bg-white border-r border-stone-200 flex-col z-30 shrink-0 transition-transform duration-300 ease-in-out shadow-none
+      `}>
+        <div className="flex p-6 border-b border-stone-100">
+          <h1 className="text-xl font-bold tracking-tight text-stone-800 flex items-center gap-3">
+            <div className="w-9 h-9 bg-accent rounded-xl flex items-center justify-center text-white text-sm shadow-md shadow-orange-200">
+              EO
+            </div>
+            <span className="text-stone-700">企業營運</span>
+          </h1>
+        </div>
 
-/* In Render - Replace icon mapping */
-<div className="flex flex-col items-end">
-  <div className="flex items-center gap-1.5 origin-right">
-    {renderWeatherIcon()}
-    <span className="text-3xl font-black text-stone-700 tracking-tighter shadow-stone-200 drop-shadow-sm">
-      {weatherTemp !== null ? Math.round(weatherTemp) : '--'}°
-    </span>
-  </div>
-  <span className="text-[10px] font-bold uppercase tracking-widest text-stone-400 mt-1">Taipei</span>
-</div>
-            </div >
+        {/* Weather & Time Widget - Enhanced */}
+        <div className="relative overflow-hidden p-6 border-b border-white/40 bg-gradient-to-br from-white/40 to-white/10 backdrop-blur-xl shadow-xl group transition-all duration-300 hover:shadow-2xl">
+          {/* Animated Background Blob */}
+          <div className="absolute -top-12 -right-12 w-40 h-40 bg-amber-300/10 rounded-full blur-3xl group-hover:bg-amber-300/20 transition-all duration-1000 animate-pulse"></div>
 
+          <div className="relative z-10">
+            <div className="flex items-start justify-between mb-2">
+              <div className="flex flex-col">
+                <div className="flex items-center gap-2 text-stone-600 mb-1">
+                  <Clock size={14} className="text-accent" />
+                  <span className="font-mono font-bold text-xs tracking-wider opacity-80">
+                    {currentTime.toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit' })}
+                  </span>
+                </div>
+                <div className="text-sm font-bold text-stone-600 tracking-wide">
+                  {currentTime.toLocaleDateString()}
+                </div>
+              </div>
+
+              <div className="flex flex-col items-end">
+                <div className="flex items-center gap-1.5 origin-right">
+                  {renderWeatherIcon()}
+                  <span className="text-3xl font-black text-stone-700 tracking-tighter shadow-stone-200 drop-shadow-sm">
+                    {weatherTemp !== null ? Math.round(weatherTemp) : '--'}°
+                  </span>
+                </div>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-stone-400 mt-1">Taipei</span>
+              </div>
+            </div>
+
+            {/* CSS for Rain/etc */}
             <style>{`
                 @keyframes rain {
                     0% { opacity: 0; transform: translateY(-5px); }
@@ -79,6 +174,8 @@ const renderWeatherIcon = () => {
                     100% { opacity: 0; transform: translateY(10px); }
                 }
             `}</style>
+          </div>
+        </div>
 
         <nav className="flex-1 p-4 space-y-2 mt-2 overflow-y-auto custom-scrollbar">
           {navItems.map((item) => {
@@ -141,38 +238,36 @@ const renderWeatherIcon = () => {
             <LogOut size={16} /> 登出系統
           </button>
         </div>
-      </aside >
+      </aside>
 
-  {/* Mobile Bottom Navigation */ }
-  < div className = "md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-stone-200 flex justify-around items-center px-2 py-2 z-40 pb-safe" >
-  {
-    navItems.map((item) => {
-      const Icon = item.icon;
-      const isActive = location.pathname === item.path;
-      return (
-        <Link
-          key={item.path}
-          to={item.path}
-          className={`flex flex-col items-center justify-center w-full py-1 rounded-xl transition-colors ${isActive ? 'text-accent' : 'text-stone-400'
-            }`}
-        >
-          <div className={`p-1.5 rounded-xl ${isActive ? 'bg-accent-soft' : 'bg-transparent'}`}>
-            <Icon size={24} strokeWidth={isActive ? 2.5 : 2} />
-          </div>
-          <span className="text-[10px] font-bold mt-0.5">{item.name}</span>
-        </Link>
-      );
-    })
-  }
-      </div >
+      {/* Mobile Bottom Navigation */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-stone-200 flex justify-around items-center px-2 py-2 z-40 pb-safe">
+        {navItems.map((item) => {
+          const Icon = item.icon;
+          const isActive = location.pathname === item.path;
+          return (
+            <Link
+              key={item.path}
+              to={item.path}
+              className={`flex flex-col items-center justify-center w-full py-1 rounded-xl transition-colors ${isActive ? 'text-accent' : 'text-stone-400'
+                }`}
+            >
+              <div className={`p-1.5 rounded-xl ${isActive ? 'bg-accent-soft' : 'bg-transparent'}`}>
+                <Icon size={24} strokeWidth={isActive ? 2.5 : 2} />
+              </div>
+              <span className="text-[10px] font-bold mt-0.5">{item.name}</span>
+            </Link>
+          );
+        })}
+      </div>
 
-  {/* Main Content */ }
-  < main className = "flex-1 overflow-auto bg-[#fafaf9] scroll-smooth pt-14 pb-20 md:pt-0 md:pb-0" >
-    <div className="p-4 md:p-8 max-w-7xl mx-auto animate-fade-in min-h-full">
-      {children}
+      {/* Main Content */}
+      <main className="flex-1 overflow-auto bg-[#fafaf9] scroll-smooth pt-14 pb-20 md:pt-0 md:pb-0">
+        <div className="p-4 md:p-8 max-w-7xl mx-auto animate-fade-in min-h-full">
+          {children}
+        </div>
+      </main>
     </div>
-      </main >
-    </div >
   );
 };
 
