@@ -219,7 +219,19 @@ const LeaveRequestPage: React.FC = () => {
 
     // --- Quota & Logic ---
 
-    const getCycleRange = (hireDateStr: string) => {
+    const getCycleRange = (emp: Employee) => {
+        const hireDateStr = emp.hire_date;
+        const system = emp.leave_system || '週年制';
+
+        if (system === '曆年制') {
+            const now = new Date();
+            return {
+                start: new Date(now.getFullYear(), 0, 1),
+                end: new Date(now.getFullYear(), 11, 31, 23, 59, 59)
+            };
+        }
+
+        // Anniversary Logic
         if (!hireDateStr) {
             const now = new Date();
             return {
@@ -233,6 +245,7 @@ const LeaveRequestPage: React.FC = () => {
         if (today < cycleStart) { cycleStart.setFullYear(today.getFullYear() - 1); }
         const cycleEnd = new Date(cycleStart);
         cycleEnd.setFullYear(cycleStart.getFullYear() + 1);
+        cycleEnd.setSeconds(cycleEnd.getSeconds() - 1); // Up to 23:59:59 before next anniversary
         return { start: cycleStart, end: cycleEnd };
     }
 
@@ -253,10 +266,10 @@ const LeaveRequestPage: React.FC = () => {
         return Math.min(days, 30);
     };
 
-    const calculateUsedLeave = (empId: string, type: LeaveType, hireDateStr: string) => {
-        const { start: cycleStart, end: cycleEnd } = getCycleRange(hireDateStr);
+    const calculateUsedLeave = (emp: Employee, type: LeaveType) => {
+        const { start: cycleStart, end: cycleEnd } = getCycleRange(emp);
         const relevantLeaves = history.filter(req =>
-            req.employee_id === empId && req.leave_type === type &&
+            req.employee_id === emp.id && req.leave_type === type &&
             (req.status === 'approved' || req.status.includes('pending')) &&
             new Date(req.start_time) >= cycleStart && new Date(req.start_time) < cycleEnd
         );
@@ -387,15 +400,15 @@ const LeaveRequestPage: React.FC = () => {
 
         if (leaveType === 'annual') {
             total = calculateAnnualLeaveEntitlement(hireDate);
-            used = calculateUsedLeave(currentEmp.id, 'annual', hireDate);
+            used = calculateUsedLeave(currentEmp, 'annual');
             label = '特別休假額度'; colorClass = 'text-accent'; bgClass = 'bg-accent';
         } else if (leaveType === 'sick') {
             total = currentEmp.sick_leave_quota || 30;
-            used = calculateUsedLeave(currentEmp.id, 'sick', hireDate);
+            used = calculateUsedLeave(currentEmp, 'sick');
             label = '病假額度'; colorClass = 'text-rose-600'; bgClass = 'bg-rose-500';
         } else if (leaveType === 'other') {
             total = currentEmp.personal_leave_quota || 14;
-            used = calculateUsedLeave(currentEmp.id, 'other', hireDate);
+            used = calculateUsedLeave(currentEmp, 'other');
             label = '事假額度'; colorClass = 'text-stone-600'; bgClass = 'bg-stone-500';
         }
 
@@ -747,12 +760,12 @@ const LeaveRequestPage: React.FC = () => {
         if (!applicant) return false;
         const applicantTitle = applicant.job_title || '';
         const applicantDept = applicant.department?.trim();
-        const myDept = currentEmp?.department?.trim();
+        const myDepts = (currentEmp?.department || '').split(',').map(d => d.trim());
 
         if (isGM) return req.status === 'pending_gm';
-        if (isManager && req.status === 'pending_dept') return applicantDept === myDept;
+        if (isManager && req.status === 'pending_dept') return myDepts.includes(applicantDept);
         if (isChief && req.status === 'pending_dept') {
-            if (applicantDept !== myDept) return false;
+            if (!myDepts.includes(applicantDept)) return false;
             if (applicantTitle.includes('經理') || applicantTitle.includes('課長')) return false;
             return true;
         }
@@ -1003,6 +1016,7 @@ const LeaveRequestPage: React.FC = () => {
                                         <option value="personal_car">自用車</option>
                                         <option value="hs_rail">高鐵/大眾運輸</option>
                                         <option value="company_car">公務車 (自動預約)</option>
+                                        <option value="carpool">共乘</option>
                                     </select>
                                     {transportMode === 'company_car' && (
                                         <div className="space-y-2 mt-2">

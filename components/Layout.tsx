@@ -110,8 +110,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       {/* Mobile Header (Simplified) */}
       <div className="md:hidden fixed top-0 left-0 right-0 h-14 bg-white text-stone-800 z-30 flex items-center justify-between px-4 shadow-sm border-b border-stone-200">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-accent rounded-lg flex items-center justify-center text-white text-xs shadow-sm">EO</div>
-          <h1 className="text-lg font-bold tracking-tight text-stone-800">EnterpriseOps</h1>
+          <img src="/logo.png" alt="Logo" className="w-8 h-8 object-contain" />
+          <h1 className="text-lg font-bold tracking-tight text-stone-800">制宜電測差勤系統</h1>
         </div>
         <div className="flex items-center gap-2">
           {currentUser && (
@@ -129,10 +129,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       `}>
         <div className="flex p-6 border-b border-stone-100">
           <h1 className="text-xl font-bold tracking-tight text-stone-800 flex items-center gap-3">
-            <div className="w-9 h-9 bg-accent rounded-xl flex items-center justify-center text-white text-sm shadow-md shadow-orange-200">
-              EO
-            </div>
-            <span className="text-stone-700">企業營運</span>
+            <img src="/logo.png" alt="Logo" className="w-12 h-auto object-contain" />
+            <span className="text-stone-700 text-base">制宜電測差勤系統</span>
           </h1>
         </div>
 

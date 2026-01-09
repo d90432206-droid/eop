@@ -21,6 +21,7 @@ export interface Employee {
 
   // New: Hire Date for Annual Leave Calculation
   hire_date: string; // YYYY-MM-DD
+  leave_system: '週年制' | '曆年制'; // New: Leave system type
 
   // Quotas
   annual_leave_quota: number;   // days
@@ -51,7 +52,7 @@ export interface LeaveRequest {
   overtime_hours?: number;
   meal_allowance?: boolean;
 
-  transport_mode?: 'personal_car' | 'hs_rail' | 'company_car' | null;
+  transport_mode?: 'personal_car' | 'hs_rail' | 'company_car' | 'carpool' | null;
   approval_level?: 'dept_manager' | 'general_manager';
 
   logs?: RequestLog[]; // JSONB column for approval history
