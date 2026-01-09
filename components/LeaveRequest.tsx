@@ -775,18 +775,33 @@ const LeaveRequestPage: React.FC = () => {
     const myHistory = filteredHistory;
     const displayHistory = currentEmp?.role === 'admin' ? myHistory : myHistory.filter(h => h.employee_id === currentEmp?.id);
 
-    const renderWorkflow = (req: LeaveRequest) => { /* Same as before */
-        const duration = calculateDurationLogic(new Date(req.start_time), new Date(req.end_time), req.is_overtime);
-        const needsGM = duration > 24 || (req as any).employees?.job_title?.includes('經理') || req.approval_level === 'general_manager';
-        const steps = [{ name: '申請', status: 'done' }, { name: '部門主管', status: req.status === 'pending_dept' ? 'current' : (req.status === 'approved' || req.status === 'pending_gm') ? 'done' : 'waiting' }];
-        if (needsGM) { steps.push({ name: '總經理', status: req.status === 'pending_gm' ? 'current' : req.status === 'approved' ? 'done' : 'waiting' }); }
+    const renderWorkflow = (req: LeaveRequest) => {
+        const duration = req.overtime_hours || calculateDurationLogic(new Date(req.start_time), new Date(req.end_time), req.is_overtime);
+        
+        // Priority: Use the approval_level from DB if exists, otherwise fallback to duration logic
+        const needsGM = req.approval_level === 'general_manager' || duration > 24 || (req as any).employees?.job_title?.includes('經理');
+        
+        const steps = [
+            { name: '申請', status: 'done' }, 
+            { name: '部門主管', status: req.status === 'pending_dept' ? 'current' : (req.status === 'approved' || req.status === 'pending_gm' || req.status === 'rejected') ? 'done' : 'waiting' }
+        ];
+        
+        if (needsGM) { 
+            steps.push({ name: '總經理', status: req.status === 'pending_gm' ? 'current' : req.status === 'approved' ? 'done' : 'waiting' }); 
+        }
+
         if (req.status === 'rejected') return <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-bold bg-rose-50 text-rose-600 border border-rose-100">🚫 已駁回</span>;
         if (req.status === 'cancelled') return <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-bold bg-stone-100 text-stone-500 border border-stone-200">✖ 已取消</span>;
+        
         return (
             <div className="flex items-center gap-1 mt-1 justify-center bg-stone-50 px-3 py-2 rounded-xl border border-stone-100 w-fit mx-auto">
                 {steps.map((step, idx) => (
                     <div key={idx} className="flex items-center">
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 transition-all ${step.status === 'done' ? 'bg-emerald-500 border-emerald-500 text-white' : step.status === 'current' ? 'bg-amber-100 border-amber-500 text-amber-700 animate-pulse' : 'bg-stone-200 border-stone-300 text-stone-400'}`} title={step.name}>
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 transition-all ${
+                            step.status === 'done' ? 'bg-emerald-500 border-emerald-500 text-white' : 
+                            step.status === 'current' ? 'bg-amber-100 border-amber-500 text-amber-700 animate-pulse' : 
+                            'bg-stone-200 border-stone-300 text-stone-400'
+                        }`} title={step.name}>
                             {step.status === 'done' ? <Check size={16} strokeWidth={3} /> : <span className="text-xs font-bold">{idx + 1}</span>}
                         </div>
                         {idx < steps.length - 1 && <div className={`w-8 h-1 ${step.status === 'done' ? 'bg-emerald-400' : 'bg-stone-300'}`}></div>}
@@ -1210,11 +1225,22 @@ const LeaveRequestPage: React.FC = () => {
                                                         </span>
                                                     </td>
                                                     <td className="px-6 py-4 text-center">
-                                                        <div className="text-sm text-stone-600 flex items-center justify-center gap-1.5 whitespace-nowrap font-medium">
-                                                            <Calendar size={16} className="text-stone-400" /> {new Date(req.start_time).toLocaleString([], { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false })}
-                                                            <span className="text-stone-300">→</span> {new Date(req.end_time).toLocaleString([], { hour: '2-digit', minute: '2-digit', hour12: false })}
+                                                        <div className="text-sm text-stone-800 flex flex-col items-center gap-1 font-bold">
+                                                            <div className="flex items-center gap-1.5 whitespace-nowrap bg-stone-50 px-3 py-1 rounded-lg border border-stone-100">
+                                                                <Calendar size={14} className="text-stone-400" /> 
+                                                                {new Date(req.start_time).toLocaleDateString('zh-TW', { month: 'numeric', day: 'numeric' })} {new Date(req.start_time).toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit', hour12: false })}
+                                                                <span className="text-stone-300 mx-1">~</span>
+                                                                {new Date(req.start_time).toDateString() !== new Date(req.end_time).toDateString() && (
+                                                                    <span>{new Date(req.end_time).toLocaleDateString('zh-TW', { month: 'numeric', day: 'numeric' })} </span>
+                                                                )}
+                                                                {new Date(req.end_time).toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit', hour12: false })}
+                                                            </div>
+                                                            <div className="text-xs font-mono text-accent bg-accent-light px-2 py-0.5 rounded-full border border-accent/10 mt-1">
+                                                                共 {req.overtime_hours || calculateDurationLogic(new Date(req.start_time), new Date(req.end_time), req.is_overtime)} 小時 
+                                                                ({((req.overtime_hours || calculateDurationLogic(new Date(req.start_time), new Date(req.end_time), req.is_overtime)) / 8).toFixed(1)} 天)
+                                                            </div>
                                                         </div>
-                                                        <div className="text-sm text-stone-500 mt-1 truncate max-w-[200px] mx-auto" title={req.reason || ''}>{req.reason}</div>
+                                                        <div className="text-sm text-stone-500 mt-2 truncate max-w-[250px] mx-auto opacity-80" title={req.reason || ''}>{req.reason}</div>
                                                     </td>
                                                     <td className="px-6 py-4">
                                                         <div className="flex justify-center">
