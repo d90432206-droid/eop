@@ -605,27 +605,44 @@ const AdminSettings: React.FC = () => {
                             <table className="min-w-full divide-y divide-stone-200 text-sm">
                                 <thead className="bg-stone-100">
                                     <tr>
-                                        <th className="px-6 py-3 text-left font-bold text-stone-600">Email</th>
-                                        <th className="px-6 py-3 text-left font-bold text-stone-600">姓名</th>
-                                        <th className="px-6 py-3 text-left font-bold text-stone-600">部門</th>
-                                        <th className="px-6 py-3 text-left font-bold text-stone-600">職稱</th>
-                                        <th className="px-6 py-3 text-left font-bold text-stone-600">權限</th>
+                                        <th className="px-6 py-4 text-left text-xs font-bold text-stone-400 uppercase tracking-widest">員工資訊</th>
+                                        <th className="px-6 py-4 text-left text-xs font-bold text-stone-400 uppercase tracking-widest">到職日 / 制度</th>
+                                        <th className="px-6 py-4 text-left text-xs font-bold text-stone-400 uppercase tracking-widest">特休 / 病 / 事</th>
+                                        <th className="px-6 py-4 text-left text-xs font-bold text-stone-400 uppercase tracking-widest">角色</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-stone-100">
-                                    {employees.map(emp => (
-                                        <tr key={emp.id} className="hover:bg-stone-50">
-                                            <td className="px-6 py-3 text-stone-600 font-mono">{emp.email}</td>
-                                            <td className="px-6 py-3 font-bold text-stone-800">{emp.full_name}</td>
-                                            <td className="px-6 py-3 text-stone-600">{emp.department}</td>
-                                            <td className="px-6 py-3 text-stone-600">
-                                                <span className={`px-2 py-1 rounded-full text-xs font-bold ${emp.job_title?.includes('經理') || emp.job_title?.includes('總經理') ? 'bg-amber-100 text-amber-800' :
-                                                    emp.job_title?.includes('課長') ? 'bg-indigo-100 text-indigo-800' : 'bg-stone-100 text-stone-600'
-                                                    }`}>
-                                                    {emp.job_title || '-'}
-                                                </span>
+                                    {employees.map((emp) => (
+                                        <tr key={emp.id} className="hover:bg-stone-50/50 transition-colors">
+                                            <td className="px-6 py-4">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-10 h-10 rounded-full bg-stone-200 flex items-center justify-center font-bold text-stone-500 border border-white shadow-sm overflow-hidden">
+                                                        {emp.avatar_url ? <img src={emp.avatar_url} alt="" className="w-full h-full object-cover" /> : emp.full_name?.charAt(0)}
+                                                    </div>
+                                                    <div>
+                                                        <div className="font-bold text-stone-800">{emp.full_name} <span className="text-xs font-mono text-stone-400 ml-1">#{emp.employee_id}</span></div>
+                                                        <div className="text-xs text-stone-500">{emp.department} · {emp.job_title}</div>
+                                                    </div>
+                                                </div>
                                             </td>
-                                            <td className="px-6 py-3">
+                                            <td className="px-6 py-4">
+                                                <div className="text-sm font-mono text-stone-600">{emp.hire_date || '未設定'}</div>
+                                                <div className="text-[10px] font-bold mt-1 inline-block px-1.5 py-0.5 rounded bg-stone-100 text-stone-500">{emp.leave_system || '週年制'}</div>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <div className="flex gap-2">
+                                                    <div className="text-center">
+                                                        <div className="text-xs font-bold text-orange-600 px-2 py-0.5 bg-orange-50 rounded border border-orange-100">{emp.annual_leave_quota}</div>
+                                                    </div>
+                                                    <div className="text-center">
+                                                        <div className="text-xs font-bold text-stone-600 px-2 py-0.5 bg-stone-50 rounded border border-stone-100 font-mono">{emp.sick_leave_quota}</div>
+                                                    </div>
+                                                    <div className="text-center">
+                                                        <div className="text-xs font-bold text-stone-600 px-2 py-0.5 bg-stone-50 rounded border border-stone-100 font-mono">{emp.personal_leave_quota}</div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4">
                                                 {emp.role === 'admin' ?
                                                     <span className="text-rose-600 font-bold bg-rose-50 px-2 py-1 rounded">Admin</span> :
                                                     <span className="text-stone-500">Employee</span>
