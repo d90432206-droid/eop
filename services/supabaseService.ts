@@ -112,6 +112,11 @@ export const signOut = async () => {
   if (error) handleError(error);
 };
 
+export const updateMyPassword = async (newPassword: string): Promise<void> => {
+  const { error } = await supabase.auth.updateUser({ password: newPassword });
+  if (error) handleError(error);
+};
+
 // --- Admin / Demo Data ---
 
 export const seedDemoData = async (): Promise<void> => {

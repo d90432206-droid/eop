@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { supabase } from '../supabaseClient';
-import { getEmployees, seedDemoData, getSystemStats, getAdminExpenseClaims, updateAdminExpenseStatus, getAdminHistoryExpenseClaims, getLeaveRequests, updateLeaveRequestDetails, getCurrentEmployee } from '../services/supabaseService';
+import { getEmployees, seedDemoData, getSystemStats, getAdminExpenseClaims, updateAdminExpenseStatus, getAdminHistoryExpenseClaims, getLeaveRequests, updateLeaveRequestDetails, getCurrentEmployee, updateMyPassword } from '../services/supabaseService';
 import { Employee, ExpenseClaim, LeaveRequest, RequestStatus } from '../types';
 import { Users, Database, ShieldAlert, RefreshCw, Activity, Layout, Download, Palette, FileJson, CheckCircle, Receipt, Printer, Check, XCircle, Edit3, Save, X } from 'lucide-react';
 
@@ -26,6 +26,8 @@ const AdminSettings: React.FC = () => {
     const [endDate, setEndDate] = useState(new Date().toISOString().substring(0, 10)); // Today
 
     const [printingGroup, setPrintingGroup] = useState<{ tripId: string, items: ExpenseClaim[] } | null>(null);
+    const [newPassword, setNewPassword] = useState('');
+    const [updatingPassword, setUpdatingPassword] = useState(false);
     const printRef = useRef<HTMLDivElement>(null);
 
     const fetchData = async () => {
@@ -590,6 +592,49 @@ const AdminSettings: React.FC = () => {
                             </div>
                         </div>
                     </div>
+
+                    {/* 3. Account Security */}
+                        <div className="bg-white rounded-2xl shadow-sm border border-stone-200 p-6">
+                            <h3 className="text-lg font-bold text-stone-800 mb-2 flex items-center gap-2">
+                                <ShieldAlert size={20} className="text-accent" /> 個人帳號安全
+                            </h3>
+                            <p className="text-sm text-stone-500 mb-6">修改您目前的登入密碼，確保帳號安全。</p>
+                            
+                            <div className="space-y-4 max-w-sm">
+                                <div>
+                                    <label className="block text-xs font-bold text-stone-500 mb-1">新密碼 (至少 6 位數)</label>
+                                    <input 
+                                        type="password" 
+                                        placeholder="請輸入新密碼"
+                                        value={newPassword}
+                                        onChange={(e) => setNewPassword(e.target.value)}
+                                        className="w-full border-stone-200 rounded-xl focus:ring-accent focus:border-accent"
+                                    />
+                                </div>
+                                <button 
+                                    onClick={async () => {
+                                        if (newPassword.length < 6) {
+                                            alert("密碼長度至少需要 6 位數");
+                                            return;
+                                        }
+                                        setUpdatingPassword(true);
+                                        try {
+                                            await updateMyPassword(newPassword);
+                                            alert("✅ 密碼已更新成功！");
+                                            setNewPassword('');
+                                        } catch (e: any) {
+                                            alert("更換失敗: " + e.message);
+                                        } finally {
+                                            setUpdatingPassword(false);
+                                        }
+                                    }}
+                                    disabled={updatingPassword || !newPassword}
+                                    className="w-full py-2.5 bg-stone-800 hover:bg-stone-900 text-white rounded-xl font-bold transition-all disabled:opacity-50"
+                                >
+                                    {updatingPassword ? '更新中...' : '確認修改密碼'}
+                                </button>
+                            </div>
+                        </div>
 
                     {/* Employee List */}
                     <div className="bg-white rounded-2xl shadow-sm border border-stone-200 overflow-hidden">
