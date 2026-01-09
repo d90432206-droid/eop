@@ -52,18 +52,18 @@ const Login: React.FC = () => {
     <div className="min-h-screen bg-[#fafaf9] flex items-center justify-center p-4">
       <div className="max-w-md w-full bg-white rounded-2xl shadow-xl overflow-hidden border border-[#e7e5e4]">
         {/* Header */}
-        <div className="bg-[#fff7ed] p-8 text-center relative overflow-hidden border-b border-orange-100">
+        <div className="bg-[#f0f9ff] p-8 text-center relative overflow-hidden border-b border-sky-100">
           <div className="inline-flex items-center justify-center mb-4 transform hover:scale-105 transition-transform duration-300">
             <img src="/logo.png" alt="Company Logo" className="w-24 h-auto drop-shadow-md" />
           </div>
-          <h1 className="text-2xl font-black text-[#44403c] tracking-tight">CHU YI 人事管理系統</h1>
-          <p className="text-[#a8a29e] text-sm mt-1 font-medium italic">Integrated Enterprise Management System</p>
+          <h1 className="text-2xl font-black text-[#0f172a] tracking-tight">CHUYI人事管理系統</h1>
+          <p className="text-[#64748b] text-sm mt-1 font-medium italic">Integrated Enterprise Management System</p>
         </div>
 
         {/* Form */}
         <div className="p-8">
-          <h2 className="text-xl font-bold text-[#44403c] mb-6 flex items-center gap-2">
-            <LogIn size={24} className="text-[#ea580c]" />
+          <h2 className="text-xl font-bold text-[#0f172a] mb-6 flex items-center gap-2">
+            <LogIn size={24} className="text-[#0284c7]" />
             員工登入
           </h2>
 
@@ -89,8 +89,8 @@ const Login: React.FC = () => {
                 required
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl border border-[#d6d3d1] focus:ring-2 focus:ring-[#ea580c] focus:border-transparent outline-none transition-all bg-white tracking-wide font-medium text-stone-700"
-                placeholder="例如：joe8250 或 boss@gmail.com"
+                className="w-full px-4 py-3 rounded-xl border border-[#cbd5e1] focus:ring-2 focus:ring-[#0284c7] focus:border-transparent outline-none transition-all bg-white tracking-wide font-medium text-slate-700"
+                placeholder="例如：106 或 106@chuyi.com.tw"
               />
               <p className="text-[10px] text-stone-400 mt-1 pl-1">
                 * 若只輸入代號，系統預設為 @{DEFAULT_DOMAIN}。若您的信箱網域不同，請輸入完整 Email。
@@ -105,7 +105,7 @@ const Login: React.FC = () => {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl border border-[#d6d3d1] focus:ring-2 focus:ring-[#ea580c] focus:border-transparent outline-none transition-all bg-white pr-10"
+                  className="w-full px-4 py-3 rounded-xl border border-[#cbd5e1] focus:ring-2 focus:ring-[#0284c7] focus:border-transparent outline-none transition-all bg-white pr-10"
                   placeholder="請輸入密碼"
                 />
                 <button
@@ -121,7 +121,7 @@ const Login: React.FC = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-[#ea580c] hover:bg-[#c2410c] text-white font-bold py-3 rounded-xl transition-colors shadow-md shadow-orange-100 disabled:opacity-50 disabled:cursor-not-allowed mt-4"
+              className="w-full bg-[#0284c7] hover:bg-[#0369a1] text-white font-bold py-3 rounded-xl transition-colors shadow-md shadow-blue-100 disabled:opacity-50 disabled:cursor-not-allowed mt-4"
             >
               {loading ? '驗證身分中...' : '登入系統'}
             </button>

@@ -111,7 +111,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       <div className="md:hidden fixed top-0 left-0 right-0 h-14 bg-white text-stone-800 z-30 flex items-center justify-between px-4 shadow-sm border-b border-stone-200">
         <div className="flex items-center gap-2">
           <img src="/logo.png" alt="Logo" className="w-8 h-8 object-contain" />
-          <h1 className="text-lg font-bold tracking-tight text-stone-800">制宜電測差勤系統</h1>
+          <h1 className="text-lg font-black tracking-tight text-slate-800">CHUYI人事管理系統</h1>
         </div>
         <div className="flex items-center gap-2">
           {currentUser && (
@@ -128,16 +128,16 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           relative top-0 left-0 h-full w-64 bg-white border-r border-stone-200 flex-col z-30 shrink-0 transition-transform duration-300 ease-in-out shadow-none
       `}>
         <div className="flex p-6 border-b border-stone-100">
-          <h1 className="text-xl font-bold tracking-tight text-stone-800 flex items-center gap-3">
+          <h1 className="text-xl font-bold tracking-tight text-slate-800 flex items-center gap-3">
             <img src="/logo.png" alt="Logo" className="w-14 h-auto object-contain" />
-            <span className="text-stone-700 text-lg font-black tracking-tighter">制宜電測差勤系統</span>
+            <span className="text-slate-700 text-lg font-black tracking-tighter">CHUYI人事管理系統</span>
           </h1>
         </div>
 
         {/* Weather & Time Widget - Enhanced */}
         <div className="relative overflow-hidden p-6 border-b border-white/40 bg-gradient-to-br from-white/40 to-white/10 backdrop-blur-xl shadow-xl group transition-all duration-300 hover:shadow-2xl">
           {/* Animated Background Blob */}
-          <div className="absolute -top-12 -right-12 w-40 h-40 bg-amber-300/10 rounded-full blur-3xl group-hover:bg-amber-300/20 transition-all duration-1000 animate-pulse"></div>
+          <div className="absolute -top-12 -right-12 w-40 h-40 bg-sky-300/10 rounded-full blur-3xl group-hover:bg-sky-300/20 transition-all duration-1000 animate-pulse"></div>
 
           <div className="relative z-10">
             <div className="flex items-start justify-between mb-2">
@@ -206,15 +206,15 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             </div>
             <div className="overflow-hidden w-full">
               {isProfileLoading ? (
-                <p className="text-xs text-stone-400 flex items-center animate-pulse">載入資料中...</p>
+                <p className="text-xs text-slate-400 flex items-center animate-pulse">載入資料中...</p>
               ) : currentUser ? (
                 <>
-                  <p className="text-base font-black text-stone-800 truncate">{currentUser.full_name}</p>
+                  <p className="text-base font-black text-slate-800 truncate">{currentUser.full_name}</p>
                   <div className="flex items-center gap-1">
                     {currentUser.role === 'admin' ?
-                      <ShieldCheck size={14} className="text-amber-500" /> : null
+                      <ShieldCheck size={14} className="text-sky-500" /> : null
                     }
-                    <p className="text-xs text-stone-500 truncate uppercase font-bold tracking-wider">
+                    <p className="text-xs text-slate-500 truncate uppercase font-bold tracking-wider">
                       {currentUser.job_title || (currentUser.role === 'admin' ? '系統管理員' : '一般員工')}
                     </p>
                   </div>
@@ -222,7 +222,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               ) : (
                 <div className="flex flex-col items-start">
                   <p className="text-xs text-rose-500 font-bold">無法讀取</p>
-                  <button onClick={fetchUser} className="text-[10px] text-stone-400 hover:text-accent flex items-center gap-1 mt-1">
+                  <button onClick={fetchUser} className="text-[10px] text-slate-400 hover:text-accent flex items-center gap-1 mt-1">
                     <RefreshCw size={10} /> 重試
                   </button>
                 </div>
@@ -231,7 +231,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           </div>
           <button
             onClick={handleLogout}
-            className="w-full flex items-center justify-center gap-2 text-xs text-stone-500 hover:text-rose-500 hover:bg-rose-50 py-2.5 rounded-lg transition-colors font-bold"
+            className="w-full flex items-center justify-center gap-2 text-xs text-slate-500 hover:text-rose-500 hover:bg-rose-50 py-2.5 rounded-lg transition-colors font-bold"
           >
             <LogOut size={16} /> 登出系統
           </button>

@@ -185,7 +185,7 @@ const StatusDashboard: React.FC = () => {
             case 'in_office':
                 return { color: 'bg-emerald-100 text-emerald-800 border-emerald-200', icon: Building2, label: '廠內辦公', fullLabel: 'IN OFFICE' };
             case 'meeting':
-                return { color: 'bg-amber-100 text-amber-800 border-amber-200', icon: CheckCircle2, label: '會議中', fullLabel: 'MEETING' };
+                return { color: 'bg-indigo-50 text-indigo-700 border-indigo-100', icon: CheckCircle2, label: '會議中', fullLabel: 'MEETING' };
             case 'out':
                 return { color: 'bg-stone-200 text-stone-700 border-stone-300', icon: MapPin, label: '外出公務', fullLabel: 'OUT' };
             case 'abroad':
@@ -319,9 +319,9 @@ const StatusDashboard: React.FC = () => {
             const isToday = d === today.getDate() && month === today.getMonth();
             const dayEvents = getEventsForDate(currentDayStr);
             days.push(
-                <div key={d} onClick={() => setSelectedDate(currentDayStr)} className={`h-36 border border-stone-100 p-2 flex flex-col cursor-pointer transition-colors hover:bg-stone-50 ${isToday ? 'bg-amber-50 ring-1 ring-amber-200' : 'bg-white'}`}>
-                    <div className={`font-bold text-xs mb-1 flex justify-between ${isToday ? 'text-amber-600' : 'text-stone-400'}`}>
-                        <span>{d}</span> {dayEvents.length > 0 && <span className="text-[10px] bg-stone-200 text-stone-600 px-1 rounded-full">{dayEvents.length}</span>}
+                <div key={d} onClick={() => setSelectedDate(currentDayStr)} className={`h-36 border border-slate-100 p-2 flex flex-col cursor-pointer transition-colors hover:bg-slate-50 ${isToday ? 'bg-sky-50 ring-1 ring-sky-200' : 'bg-white'}`}>
+                    <div className={`font-bold text-xs mb-1 flex justify-between ${isToday ? 'text-sky-600' : 'text-slate-400'}`}>
+                        <span>{d}</span> {dayEvents.length > 0 && <span className="text-[10px] bg-sky-100 text-sky-600 px-1 rounded-full">{dayEvents.length}</span>}
                     </div>
                     <div className="space-y-1 overflow-hidden flex-1">
                         {dayEvents.slice(0, 4).map(evt => {
@@ -369,7 +369,7 @@ const StatusDashboard: React.FC = () => {
 
             {/* Hero Section: My Status (Collapsed on mobile) */}
             {currentEmp && (
-                <div className="bg-gradient-to-br from-orange-500 to-amber-600 rounded-2xl shadow-xl shadow-orange-200/50 p-4 md:p-6 text-white overflow-hidden relative">
+                <div className="bg-gradient-to-br from-sky-600 to-blue-700 rounded-3xl shadow-xl shadow-blue-100 p-4 md:p-6 text-white overflow-hidden relative">
                     <div className="absolute top-0 right-0 p-32 bg-white/10 rounded-full blur-3xl transform translate-x-10 -translate-y-10"></div>
 
                     <div className="relative z-10 flex flex-row items-center justify-between gap-4 md:gap-6">
@@ -386,12 +386,12 @@ const StatusDashboard: React.FC = () => {
                                         </div>
                                     )}
                                 </h1>
-                                <div className="flex items-center gap-2 text-orange-50 mt-1.5 font-medium text-sm md:text-base truncate opacity-90">
+                                <div className="flex items-center gap-2 text-sky-50 mt-1.5 font-medium text-sm md:text-base truncate opacity-90">
                                     <span className="bg-black/10 px-2 py-0.5 rounded">{currentEmp.department}</span>
                                     <span className="w-1 h-1 bg-white/50 rounded-full"></span>
                                     <span>{currentEmp.job_title}</span>
                                 </div>
-                                <div className={`mt-3 inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-bold shadow-sm bg-white text-orange-700`}>
+                                <div className={`mt-3 inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-sm font-black shadow-sm bg-white text-sky-700`}>
                                     <myStatusConfig.icon size={16} /> {myStatusConfig.label}
                                 </div>
                             </div>
@@ -399,7 +399,7 @@ const StatusDashboard: React.FC = () => {
 
                         {/* Desktop Quick Actions */}
                         <div className="hidden lg:flex flex-col gap-2 w-full md:w-auto">
-                            <p className="text-orange-100 text-[10px] font-bold uppercase tracking-widest mb-1 text-center md:text-left opacity-80">快速切換狀態</p>
+                            <p className="text-sky-50 text-[10px] font-bold uppercase tracking-widest mb-1 text-center md:text-left opacity-80">快速切換狀態</p>
                             <div className="grid grid-cols-4 gap-2">
                                 <button onClick={() => handleQuickStatusUpdate(currentEmp.id, 'in_office')} className="flex items-center justify-center gap-2 px-4 py-3 bg-white/10 hover:bg-white/20 hover:scale-105 backdrop-blur-sm text-white rounded-xl font-bold transition-all border border-white/10 shadow-sm">
                                     <Building2 size={18} /> 廠內
@@ -462,7 +462,7 @@ const StatusDashboard: React.FC = () => {
             <div className="lg:hidden fixed bottom-20 right-4 z-40">
                 <button
                     onClick={() => setIsMobileSheetOpen(true)}
-                    className="bg-accent text-white p-4 rounded-full shadow-xl shadow-orange-300 border-4 border-white active:scale-95 transition-transform"
+                    className="bg-accent text-white p-4 rounded-full shadow-xl shadow-blue-200 border-4 border-white active:scale-95 transition-transform"
                     aria-label="更新狀態"
                 >
                     <Plus size={24} strokeWidth={3} />
