@@ -279,34 +279,52 @@ export const createLeaveRequest = async (
   request: Omit<LeaveRequest, 'id' | 'created_at' | 'employees'>,
   vehicleIdForBooking?: number
 ): Promise<void> => {
-  // 1. Create Leave Request
+  // 1. Calculate duration to check if >= 3 days (approx 3 * 8 hours or 3 days)
+  const start = new Date(request.start_time).getTime();
+  const end = new Date(request.end_time).getTime();
+  const diffDays = (end - start) / (1000 * 60 * 60 * 24);
+
+  // Advanced Routing Logic
+  let initialStatus = request.status; // Default is 'pending'
+  
+  // Rule: If 3 or more days, must go to GM (unless requester is already admin/gm)
+  if (diffDays >= 3 && initialStatus !== 'approved') {
+    initialStatus = 'pending_gm';
+  }
+
+  const finalRequest = {
+    ...request,
+    status: initialStatus
+  };
+
+  // 2. Create Leave Request
   const { error } = await supabase
     .from('leave_requests')
-    .insert(request);
+    .insert(finalRequest);
 
   if (error) handleError(error);
 
-  // 2. Create Vehicle Booking if needed (Sync status with Leave Request)
-  if (request.transport_mode === 'company_car' && vehicleIdForBooking) {
+  // 3. Create Vehicle Booking if needed
+  if (finalRequest.transport_mode === 'company_car' && vehicleIdForBooking) {
     await createVehicleBooking({
       vehicle_id: vehicleIdForBooking,
-      employee_id: request.employee_id,
-      start_time: request.start_time,
-      end_time: request.end_time,
-      purpose: `公務車連動：${request.reason}`,
+      employee_id: finalRequest.employee_id,
+      start_time: finalRequest.start_time,
+      end_time: finalRequest.end_time,
+      purpose: `公務車連動：${finalRequest.reason}`,
       start_mileage: null,
       end_mileage: null,
-      status: request.status // Sync status: pending_dept, pending_gm, or approved
+      status: finalRequest.status
     });
   }
 
-  // 3. If auto-approved (e.g. GM), update status
-  if (request.status === 'approved') {
+  // 4. Update status if auto-approved
+  if (finalRequest.status === 'approved') {
     const now = new Date();
-    const start = new Date(request.start_time);
-    if (start <= now && new Date(request.end_time) > now) {
-      const status = request.leave_type === 'business' ? 'out' : 'leave';
-      await updateEmployeeStatus(request.employee_id, status, request.reason, request.end_time);
+    const startTimeDate = new Date(finalRequest.start_time);
+    if (startTimeDate <= now && new Date(finalRequest.end_time) > now) {
+      const status = finalRequest.leave_type === 'business' ? 'out' : 'leave';
+      await updateEmployeeStatus(finalRequest.employee_id, status, finalRequest.reason, finalRequest.end_time);
     }
   }
 };
