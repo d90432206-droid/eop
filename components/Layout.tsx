@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, CalendarDays, Car, Receipt, UserCircle, LogOut, ShieldCheck, CloudSun, Clock, Users, RefreshCw, Settings, Menu, X, Package, Sun, Cloud, CloudRain, CloudLightning, Snowflake } from 'lucide-react';
-import { getCurrentEmployee, signOut } from '../services/supabaseService';
+import { LayoutDashboard, CalendarDays, Car, Receipt, UserCircle, LogOut, ShieldCheck, CloudSun, Clock, Users, RefreshCw, Settings, Menu, X, Package, Sun, Cloud, CloudRain, CloudLightning, Snowflake, Key, Lock, CheckCircle2 } from 'lucide-react';
+import { getCurrentEmployee, signOut, updateMyPassword } from '../services/supabaseService';
 import { Employee } from '../types';
 
 interface LayoutProps {
@@ -19,6 +19,11 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   // Mobile Sidebar State
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  
+  // Password Change State
+  const [isPwdModalOpen, setIsPwdModalOpen] = useState(false);
+  const [newPwd, setNewPwd] = useState('');
+  const [isUpdating, setIsUpdating] = useState(false);
 
   const fetchUser = async () => {
     setIsProfileLoading(true);
@@ -229,12 +234,20 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               )}
             </div>
           </div>
-          <button
-            onClick={handleLogout}
-            className="w-full flex items-center justify-center gap-2 text-xs text-slate-500 hover:text-rose-500 hover:bg-rose-50 py-2.5 rounded-lg transition-colors font-bold"
-          >
-            <LogOut size={16} /> 登出系統
-          </button>
+          <div className="flex gap-2">
+            <button
+                onClick={() => setIsPwdModalOpen(true)}
+                className="flex-1 flex items-center justify-center gap-2 text-xs text-slate-500 hover:text-accent hover:bg-orange-50 py-2.5 rounded-lg transition-colors font-bold border border-transparent hover:border-accent/10"
+            >
+                <Key size={16} /> 改密碼
+            </button>
+            <button
+                onClick={handleLogout}
+                className="flex-1 flex items-center justify-center gap-2 text-xs text-slate-500 hover:text-rose-500 hover:bg-rose-50 py-2.5 rounded-lg transition-colors font-bold"
+            >
+                <LogOut size={16} /> 登出
+            </button>
+          </div>
         </div>
       </aside>
 
@@ -265,6 +278,72 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           {children}
         </div>
       </main>
+
+      {/* Password Change Modal - Universal for all Employees */}
+      {isPwdModalOpen && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-fade-in text-slate-800">
+            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden border border-stone-200 animate-slide-up">
+                <div className="p-8 pb-4">
+                    <div className="w-16 h-16 bg-orange-100 rounded-2xl flex items-center justify-center mb-6 text-orange-600 shadow-inner">
+                        <Lock size={32} />
+                    </div>
+                    <h3 className="text-2xl font-black tracking-tight mb-2">更新個人登入密碼</h3>
+                    <p className="text-stone-500 text-sm font-medium leading-relaxed">請輸入您的新密碼。更新後下次登入請使用新密碼。</p>
+                </div>
+
+                <div className="p-8 pt-4 space-y-6">
+                    <div className="space-y-2">
+                        <label className="text-xs font-black uppercase tracking-widest text-stone-400">新密碼 (New Password)</label>
+                        <input 
+                            type="password"
+                            placeholder="請至少輸入 6 位字元"
+                            value={newPwd}
+                            onChange={(e) => setNewPwd(e.target.value)}
+                            className="w-full bg-stone-50 border-stone-200 rounded-2xl p-4 font-mono focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all placeholder:text-stone-300"
+                            autoFocus
+                        />
+                    </div>
+
+                    <div className="flex gap-3">
+                        <button 
+                            onClick={() => { setIsPwdModalOpen(false); setNewPwd(''); }}
+                            className="flex-1 py-4 px-6 rounded-2xl bg-stone-100 text-stone-500 font-bold hover:bg-stone-200 transition-colors"
+                        >
+                            取消
+                        </button>
+                        <button 
+                            onClick={async () => {
+                                if (newPwd.length < 6) {
+                                  alert("密碼長度需至少 6 位！");
+                                  return;
+                                }
+                                setIsUpdating(true);
+                                try {
+                                  await updateMyPassword(newPwd);
+                                  alert("✅ 密碼更新成功！下次登入請記得使用新密碼。");
+                                  setIsPwdModalOpen(false);
+                                  setNewPwd('');
+                                } catch (e: any) {
+                                  alert("修改失敗: " + e.message);
+                                } finally {
+                                  setIsUpdating(false);
+                                }
+                            }}
+                            disabled={isUpdating || !newPwd}
+                            className="flex-1 py-4 px-6 rounded-2xl bg-accent text-white font-black shadow-lg shadow-accent/20 hover:bg-orange-600 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                        >
+                            {isUpdating ? <RefreshCw size={20} className="animate-spin" /> : <CheckCircle2 size={20} />}
+                            確認更新
+                        </button>
+                    </div>
+                </div>
+                
+                <div className="bg-stone-50 p-4 text-center">
+                    <span className="text-[10px] font-bold text-stone-400 uppercase tracking-[0.2em]">Security Protocol Layer v2.0</span>
+                </div>
+            </div>
+        </div>
+      )}
     </div>
   );
 };
