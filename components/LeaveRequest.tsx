@@ -1065,8 +1065,27 @@ const LeaveRequestPage: React.FC = () => {
                                 <textarea required rows={3} value={reason} onChange={(e) => setReason(e.target.value)} className="w-full border-stone-300 rounded-xl p-3 border focus:ring-2 focus:ring-accent/50 focus:border-accent outline-none transition-shadow" placeholder="請簡述說明..." />
                             </div>
 
-                            <button type="submit" disabled={loading || !!overlapError} className={`w-full text-white py-2.5 px-4 rounded-xl shadow-md font-bold disabled:opacity-50 mt-4 flex justify-center items-center gap-2 transition-all active:scale-[0.98] ${!currentEmp || !!overlapError ? 'bg-stone-400 cursor-not-allowed' : 'bg-accent hover:bg-accent-hover shadow-orange-200'}`}>
-                                {loading ? <><RefreshCw className="animate-spin" size={16} /> 處理中...</> : <>送出申請 <CheckCircle size={16} /></>}
+                            <button 
+                                type="submit" 
+                                disabled={loading || !!overlapError || !currentEmp} 
+                                className={`w-full py-3.5 px-4 rounded-xl shadow-md font-bold transition-all active:scale-[0.98] mt-4 flex justify-center items-center gap-2 ${
+                                    loading || !!overlapError || !currentEmp 
+                                    ? 'bg-stone-300 text-stone-500 cursor-not-allowed' 
+                                    : 'bg-orange-500 hover:bg-orange-600 text-white shadow-orange-200'
+                                }`}
+                                style={{ minHeight: '50px' }}
+                            >
+                                {loading ? (
+                                    <>
+                                        <RefreshCw className="animate-spin" size={18} />
+                                        <span>處理中...</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <span className="text-lg">確認送出申請</span>
+                                        <CheckCircle size={20} />
+                                    </>
+                                )}
                             </button>
                         </form>
                     </div>
