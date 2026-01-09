@@ -675,7 +675,7 @@ const AdminSettings: React.FC = () => {
                                                 <div className="text-[10px] font-bold mt-1 inline-block px-1.5 py-0.5 rounded bg-stone-100 text-stone-500">{emp.leave_system || '週年制'}</div>
                                             </td>
                                             <td className="px-6 py-4">
-                                                <div className="flex gap-2">
+                                                <div className="flex gap-1.5">
                                                     <button 
                                                         onClick={async () => {
                                                             const newVal = prompt(`修改 ${emp.full_name} 的特休額度`, String(emp.annual_leave_quota));
@@ -684,9 +684,9 @@ const AdminSettings: React.FC = () => {
                                                                 fetchData();
                                                             }
                                                         }}
-                                                        className="text-center group"
+                                                        className="text-center"
                                                     >
-                                                        <div className="text-xs font-bold text-orange-600 px-2 py-0.5 bg-orange-50 rounded border border-orange-100 group-hover:bg-orange-100 transition-colors cursor-pointer" title="點擊修改">{emp.annual_leave_quota}</div>
+                                                        <div className="text-[11px] font-black w-8 h-7 flex items-center justify-center text-orange-600 bg-orange-50 rounded-lg border border-orange-100 hover:bg-orange-100 transition-all cursor-pointer shadow-sm" title="特休：點擊修改">{emp.annual_leave_quota}</div>
                                                     </button>
                                                     <button 
                                                         onClick={async () => {
@@ -696,9 +696,9 @@ const AdminSettings: React.FC = () => {
                                                                 fetchData();
                                                             }
                                                         }}
-                                                        className="text-center group"
+                                                        className="text-center"
                                                     >
-                                                        <div className="text-xs font-bold text-stone-600 px-2 py-0.5 bg-stone-50 rounded border border-stone-100 font-mono group-hover:bg-stone-100 transition-colors cursor-pointer" title="點擊修改">{emp.sick_leave_quota}</div>
+                                                        <div className="text-[11px] font-black w-8 h-7 flex items-center justify-center text-stone-600 bg-stone-50 rounded-lg border border-stone-100 font-mono hover:bg-stone-100 transition-all cursor-pointer shadow-sm" title="病假：點擊修改">{emp.sick_leave_quota}</div>
                                                     </button>
                                                     <button 
                                                         onClick={async () => {
@@ -708,9 +708,9 @@ const AdminSettings: React.FC = () => {
                                                                 fetchData();
                                                             }
                                                         }}
-                                                        className="text-center group"
+                                                        className="text-center"
                                                     >
-                                                        <div className="text-xs font-bold text-stone-600 px-2 py-0.5 bg-stone-50 rounded border border-stone-100 font-mono group-hover:bg-stone-100 transition-colors cursor-pointer" title="點擊修改">{emp.personal_leave_quota}</div>
+                                                        <div className="text-[11px] font-black w-8 h-7 flex items-center justify-center text-stone-600 bg-stone-50 rounded-lg border border-stone-100 font-mono hover:bg-stone-100 transition-all cursor-pointer shadow-sm" title="事假：點擊修改">{emp.personal_leave_quota}</div>
                                                     </button>
                                                 </div>
                                             </td>
