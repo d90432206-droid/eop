@@ -1,6 +1,6 @@
 
 import { supabase } from '../supabaseClient';
-import { Employee, LeaveRequest, Vehicle, VehicleBooking, ExpenseClaim, EmployeeStatus, VehicleLog, Visitor, RequestStatus, RequestLog, Asset } from '../types';
+import { Employee, LeaveRequest, Vehicle, VehicleBooking, ExpenseClaim, EmployeeStatus, VehicleLog, Visitor, RequestStatus, RequestLog, Asset, LeaveType } from '../types';
 
 /**
  * Helper for Error Handling
@@ -830,7 +830,7 @@ export const deleteAsset = async (id: number): Promise<void> => {
 
 export const updateLeaveRequestDetails = async (
   id: number,
-  updates: { start_time?: string, end_time?: string, status?: RequestStatus },
+  updates: { start_time?: string, end_time?: string, status?: RequestStatus, leave_type?: LeaveType, is_overtime?: boolean },
   adminName: string
 ): Promise<void> => {
 

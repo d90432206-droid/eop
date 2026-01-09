@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { supabase } from '../supabaseClient';
 import { getEmployees, seedDemoData, getSystemStats, getAdminExpenseClaims, updateAdminExpenseStatus, getAdminHistoryExpenseClaims, getLeaveRequests, updateLeaveRequestDetails, getCurrentEmployee, updateMyPassword, updateLeaveQuotas } from '../services/supabaseService';
-import { Employee, ExpenseClaim, LeaveRequest, RequestStatus } from '../types';
+import { Employee, ExpenseClaim, LeaveRequest, RequestStatus, LeaveType } from '../types';
 import { Users, Database, ShieldAlert, RefreshCw, Activity, Layout, Download, Palette, FileJson, CheckCircle, Receipt, Printer, Check, XCircle, Edit3, Save, X } from 'lucide-react';
 
 const AdminSettings: React.FC = () => {
@@ -14,7 +14,13 @@ const AdminSettings: React.FC = () => {
     // Leave Correction State
     const [allLeaves, setAllLeaves] = useState<LeaveRequest[]>([]);
     const [editingLeave, setEditingLeave] = useState<LeaveRequest | null>(null);
-    const [editForm, setEditForm] = useState<{ start: string, end: string, status: RequestStatus }>({ start: '', end: '', status: 'pending' });
+    const [editForm, setEditForm] = useState<{ start: string, end: string, status: RequestStatus, leaveType: LeaveType, isOvertime: boolean }>({ 
+        start: '', 
+        end: '', 
+        status: 'pending', 
+        leaveType: 'annual', 
+        isOvertime: false 
+    });
 
     // Expense Admin State
     const [pendingExpenses, setPendingExpenses] = useState<ExpenseClaim[]>([]);
@@ -219,15 +225,31 @@ const AdminSettings: React.FC = () => {
                                     <tr key={req.id} className="hover:bg-stone-50">
                                         <td className="px-4 py-3 font-mono text-stone-500">#{req.id}</td>
                                         <td className="px-4 py-3 font-bold text-stone-700">{(req as any).employees?.full_name}</td>
-                                        <td className="px-4 py-3">{req.is_overtime ? '加班' : req.leave_type}</td>
+                                        <td className="px-4 py-3">
+                                            {req.is_overtime ? '加班' : 
+                                             req.leave_type === 'annual' ? '特休' :
+                                             req.leave_type === 'sick' ? '病假' :
+                                             req.leave_type === 'business' ? '公出' :
+                                             req.leave_type === 'other' ? '事假/其他' : req.leave_type}
+                                        </td>
                                         <td className="px-4 py-3 font-mono text-stone-600">
                                             {new Date(req.start_time).toLocaleString()} <br /> ~ {new Date(req.end_time).toLocaleString()}
                                         </td>
                                         <td className="px-4 py-3">
-                                            <span className={`px-2 py-0.5 rounded text-xs border ${req.status === 'approved' ? 'bg-emerald-50 text-emerald-600 border-emerald-200' :
-                                                    req.status === 'rejected' ? 'bg-rose-50 text-rose-600 border-rose-200' :
-                                                        'bg-amber-50 text-amber-600 border-amber-200'
-                                                }`}>{req.status}</span>
+                                            <span className={`px-2 py-0.5 rounded text-xs border font-bold ${
+                                                req.status === 'approved' ? 'bg-emerald-50 text-emerald-600 border-emerald-200' :
+                                                req.status === 'completed' ? 'bg-indigo-50 text-indigo-600 border-indigo-200' :
+                                                req.status === 'rejected' ? 'bg-rose-50 text-rose-600 border-rose-200' :
+                                                req.status === 'cancelled' ? 'bg-stone-50 text-stone-500 border-stone-200' :
+                                                'bg-amber-50 text-amber-600 border-amber-200'
+                                            }`}>
+                                                {req.status === 'pending_dept' ? '部門審核' :
+                                                 req.status === 'pending_gm' ? 'GM審核' :
+                                                 req.status === 'approved' ? '已核准' :
+                                                 req.status === 'rejected' ? '已退回' :
+                                                 req.status === 'cancelled' ? '已取消' :
+                                                 req.status === 'completed' ? '已核銷' : req.status}
+                                            </span>
                                         </td>
                                         <td className="px-4 py-3 text-right">
                                             <button
@@ -236,7 +258,9 @@ const AdminSettings: React.FC = () => {
                                                     setEditForm({
                                                         start: new Date(req.start_time).toISOString().slice(0, 16),
                                                         end: new Date(req.end_time).toISOString().slice(0, 16),
-                                                        status: req.status
+                                                        status: req.status,
+                                                        leaveType: req.leave_type,
+                                                        isOvertime: req.is_overtime || false
                                                     });
                                                 }}
                                                 className="text-accent hover:bg-orange-50 p-1.5 rounded transition-colors"
@@ -278,18 +302,46 @@ const AdminSettings: React.FC = () => {
                                             className="w-full border-stone-300 rounded-lg"
                                         />
                                     </div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-xs font-bold text-stone-500 mb-1">假別</label>
+                                            <select
+                                                value={editForm.leaveType}
+                                                onChange={e => setEditForm({ ...editForm, leaveType: e.target.value as LeaveType })}
+                                                className="w-full border-stone-300 rounded-lg text-sm"
+                                            >
+                                                <option value="annual">特休 (Annual)</option>
+                                                <option value="sick">病假 (Sick)</option>
+                                                <option value="business">公出 (Business)</option>
+                                                <option value="other">事假/其他 (Other)</option>
+                                                <option value="overtime">加班 (Overtime)</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-bold text-stone-500 mb-1">加班標記</label>
+                                            <select
+                                                value={editForm.isOvertime ? 'true' : 'false'}
+                                                onChange={e => setEditForm({ ...editForm, isOvertime: e.target.value === 'true' })}
+                                                className="w-full border-stone-300 rounded-lg text-sm"
+                                            >
+                                                <option value="false">否</option>
+                                                <option value="true">是 (Overtime)</option>
+                                            </select>
+                                        </div>
+                                    </div>
                                     <div>
                                         <label className="block text-xs font-bold text-stone-500 mb-1">狀態</label>
                                         <select
                                             value={editForm.status}
                                             onChange={e => setEditForm({ ...editForm, status: e.target.value as RequestStatus })}
-                                            className="w-full border-stone-300 rounded-lg"
+                                            className="w-full border-stone-300 rounded-lg text-sm font-bold"
                                         >
-                                            <option value="pending_dept">Pending Dept</option>
-                                            <option value="pending_gm">Pending GM</option>
-                                            <option value="approved">Approved</option>
-                                            <option value="rejected">Rejected</option>
-                                            <option value="cancelled">Cancelled</option>
+                                            <option value="pending_dept">⏳ 部門審核中 (Pending Dept)</option>
+                                            <option value="pending_gm">⏳ 總經理審核中 (Pending GM)</option>
+                                            <option value="approved">✅ 已核准 (Approved)</option>
+                                            <option value="completed">💰 已核銷 (Completed / Settled)</option>
+                                            <option value="rejected">❌ 已退回 (Rejected)</option>
+                                            <option value="cancelled">✖ 已取消 (Cancelled)</option>
                                         </select>
                                     </div>
 
@@ -304,7 +356,9 @@ const AdminSettings: React.FC = () => {
                                                         {
                                                             start_time: new Date(editForm.start).toISOString(),
                                                             end_time: new Date(editForm.end).toISOString(),
-                                                            status: editForm.status
+                                                            status: editForm.status,
+                                                            leave_type: editForm.leaveType,
+                                                            is_overtime: editForm.isOvertime
                                                         },
                                                         'Admin' // In real app, get current user name
                                                     );
@@ -364,7 +418,7 @@ const AdminSettings: React.FC = () => {
                             {expenseView === 'pending' ? "目前沒有待審核的費用申請" : "尚無歷史紀錄"}
                         </div>
                     ) : (
-                        Object.entries(activeGroupedExpenses).map(([tripId, items]) => {
+                        Object.entries(activeGroupedExpenses).map(([tripId, items]: [string, ExpenseClaim[]]) => {
                             const total = items.reduce((sum, i) => sum + i.amount, 0);
                             const firstItem = items[0];
                             const employeeName = (firstItem.employees as any)?.full_name || 'Unknown';

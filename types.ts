@@ -2,7 +2,7 @@
 export type EmployeeStatus = 'in_office' | 'meeting' | 'out' | 'abroad' | 'leave';
 export type LeaveType = 'annual' | 'sick' | 'business' | 'overtime' | 'other';
 // Updated to support multi-stage approval and cancellation
-export type RequestStatus = 'pending' | 'pending_dept' | 'pending_gm' | 'approved' | 'rejected' | 'returned' | 'cancelled';
+export type RequestStatus = 'pending' | 'pending_dept' | 'pending_gm' | 'approved' | 'rejected' | 'returned' | 'cancelled' | 'completed';
 export type UserRole = 'admin' | 'employee';
 
 export interface Employee {
