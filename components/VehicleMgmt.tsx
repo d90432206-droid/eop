@@ -203,10 +203,16 @@ const VehicleMgmt: React.FC = () => {
                                     <div className="p-6 flex-1">
                                         <div className="flex justify-between items-start mb-4">
                                             <div className="flex items-center gap-4">
-                                                <div className="p-3.5 bg-stone-50 rounded-2xl text-stone-600 shadow-sm"><Car size={32} strokeWidth={1.5} /></div>
+                                                <div className="w-24 h-16 rounded-xl border border-stone-100 overflow-hidden bg-stone-50 flex items-center justify-center shrink-0 shadow-sm">
+                                                    {car.image_url ? (
+                                                        <img src={car.image_url} alt={car.name} className="w-full h-full object-cover" />
+                                                    ) : (
+                                                        <Car size={24} className="text-stone-300" strokeWidth={1.5} />
+                                                    )}
+                                                </div>
                                                 <div>
-                                                    <h3 className="font-bold text-xl text-stone-800 tracking-tight">{car.name}</h3>
-                                                    <p className="text-xs font-mono font-bold text-stone-400 tracking-widest">{car.plate_number}</p>
+                                                    <h3 className="font-bold text-lg text-stone-800 tracking-tight leading-tight">{car.name}</h3>
+                                                    <p className="text-xs font-mono font-bold text-stone-400 tracking-widest mt-0.5">{car.plate_number}</p>
                                                 </div>
                                             </div>
                                         </div>

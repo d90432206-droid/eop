@@ -129,18 +129,29 @@ export const seedDemoData = async (): Promise<void> => {
   ];
 
   for (const u of updates) {
-    const { error } = await supabase
+    // 1. 先確認該 Email 在 employees 表中是否存在（ID 由 Trigger 自動產生）
+    const { data: emp, error: fetchError } = await supabase
       .from('employees')
-      .update({
-        full_name: u.full_name,
-        department: u.department,
-        job_title: u.job_title,
-        role: u.role,
-        phone: u.phone
-      })
-      .eq('email', u.email);
+      .select('id')
+      .eq('email', u.email)
+      .single();
 
-    if (error) console.error(`Failed to update ${u.email}:`, error);
+    if (emp) {
+      const { error } = await supabase
+        .from('employees')
+        .update({
+          full_name: u.full_name,
+          department: u.department,
+          job_title: u.job_title,
+          role: u.role,
+          phone: u.phone
+        })
+        .eq('id', emp.id);
+
+      if (error) console.error(`Failed to update ${u.email}:`, error);
+    } else {
+      console.warn(`[Seed] User ${u.email} not found in employees table. Please create Auth user first.`);
+    }
   }
 };
 

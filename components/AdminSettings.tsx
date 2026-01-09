@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { getEmployees, seedDemoData, getSystemStats, getAdminExpenseClaims, updateAdminExpenseStatus, getAdminHistoryExpenseClaims, getLeaveRequests, updateLeaveRequestDetails } from '../services/supabaseService';
+import { supabase } from '../supabaseClient';
+import { getEmployees, seedDemoData, getSystemStats, getAdminExpenseClaims, updateAdminExpenseStatus, getAdminHistoryExpenseClaims, getLeaveRequests, updateLeaveRequestDetails, getCurrentEmployee } from '../services/supabaseService';
 import { Employee, ExpenseClaim, LeaveRequest, RequestStatus } from '../types';
 import { Users, Database, ShieldAlert, RefreshCw, Activity, Layout, Download, Palette, FileJson, CheckCircle, Receipt, Printer, Check, XCircle, Edit3, Save, X } from 'lucide-react';
 
@@ -62,17 +63,39 @@ const AdminSettings: React.FC = () => {
     }, [startDate, endDate, activeTab, expenseView]);
 
     const handleApplyDemoData = async () => {
-        if (!confirm("確定要套用 10 人模擬架構嗎？\n這將重置現有員工資料與權限。")) return;
+        if (!confirm("確定要套用 10 人模擬架構嗎？\n這將更新現有人員的職稱與部門。")) return;
         setSeeding(true);
         try {
+            // 先嘗試同步一次
+            const { error: syncError } = await supabase.from('employees').insert([{}]).select(); 
+            // 如果您在 SQL Editor 執行了補救指令，這裡也可以手動觸發更強力的同步
             await seedDemoData();
             await fetchData();
             alert("模擬架構套用成功！");
         } catch (e) {
             console.error(e);
-            alert("套用失敗，請查看 Console");
+            alert("套用失敗，請查看 Console。請確保您已在 SQL Editor 執行過『補救指令』。");
         } finally {
             setSeeding(false);
+        }
+    };
+
+    const handleRepairSync = async () => {
+        setLoading(true);
+        try {
+            // 執行 SQL 補救指令的功能（透過 RPC 或簡單的 ping）
+            const { error } = await supabase.rpc('sync_auth_users_to_employees');
+            if (error) {
+                // 如果 RPC 沒設好，提醒使用者去 SQL Editor 執行
+                alert("請在 Supabase SQL Editor 執行以下指令：\n\nINSERT INTO public.employees (id, email, full_name, role) \nSELECT id, email, email, 'employee' \nFROM auth.users \nON CONFLICT (id) DO NOTHING;");
+            } else {
+                alert("同步完成！");
+            }
+            await fetchData();
+        } catch (e) {
+            console.error(e);
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -547,14 +570,23 @@ const AdminSettings: React.FC = () => {
                                     此功能會根據 Email 自動更新員工的「部門」、「職稱」與「權限」，以符合測試腳本的需求。<br />
                                     包含：總經理、總務經理、業務部(3人)、品保部(3人)、ATS部(3人)。
                                 </p>
-                                <button
-                                    onClick={handleApplyDemoData}
-                                    disabled={seeding}
-                                    className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl font-bold shadow-md transition-colors flex items-center gap-2"
-                                >
-                                    {seeding ? <RefreshCw className="animate-spin" size={18} /> : <CheckCircle size={18} />}
-                                    {seeding ? '資料更新中...' : '套用模擬架構設定'}
-                                </button>
+                                <div className="flex gap-3">
+                                    <button
+                                        onClick={handleApplyDemoData}
+                                        disabled={seeding}
+                                        className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl font-bold shadow-md transition-colors flex items-center gap-2"
+                                    >
+                                        {seeding ? <RefreshCw className="animate-spin" size={18} /> : <CheckCircle size={18} />}
+                                        {seeding ? '資料更新中...' : '套用模擬架構設定'}
+                                    </button>
+                                    <button
+                                        onClick={handleRepairSync}
+                                        className="bg-stone-800 hover:bg-stone-900 text-white px-5 py-2.5 rounded-xl font-bold shadow-md transition-colors flex items-center gap-2"
+                                    >
+                                        <RefreshCw size={18} />
+                                        修復 Auth 同步 (補救資料)
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
