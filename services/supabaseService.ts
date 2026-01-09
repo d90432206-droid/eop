@@ -218,6 +218,18 @@ export const updateEmployeeStatus = async (
   if (error) handleError(error);
 };
 
+export const updateLeaveQuotas = async (
+  id: string,
+  quotas: { annual_leave_quota?: number, sick_leave_quota?: number, personal_leave_quota?: number }
+): Promise<void> => {
+  const { error } = await supabase
+    .from('employees')
+    .update(quotas)
+    .eq('id', id);
+
+  if (error) handleError(error);
+};
+
 // --- Leave Requests ---
 
 export const checkLeaveOverlap = async (

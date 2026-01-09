@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { supabase } from '../supabaseClient';
-import { getEmployees, seedDemoData, getSystemStats, getAdminExpenseClaims, updateAdminExpenseStatus, getAdminHistoryExpenseClaims, getLeaveRequests, updateLeaveRequestDetails, getCurrentEmployee, updateMyPassword } from '../services/supabaseService';
+import { getEmployees, seedDemoData, getSystemStats, getAdminExpenseClaims, updateAdminExpenseStatus, getAdminHistoryExpenseClaims, getLeaveRequests, updateLeaveRequestDetails, getCurrentEmployee, updateMyPassword, updateLeaveQuotas } from '../services/supabaseService';
 import { Employee, ExpenseClaim, LeaveRequest, RequestStatus } from '../types';
 import { Users, Database, ShieldAlert, RefreshCw, Activity, Layout, Download, Palette, FileJson, CheckCircle, Receipt, Printer, Check, XCircle, Edit3, Save, X } from 'lucide-react';
 
@@ -676,15 +676,42 @@ const AdminSettings: React.FC = () => {
                                             </td>
                                             <td className="px-6 py-4">
                                                 <div className="flex gap-2">
-                                                    <div className="text-center">
-                                                        <div className="text-xs font-bold text-orange-600 px-2 py-0.5 bg-orange-50 rounded border border-orange-100">{emp.annual_leave_quota}</div>
-                                                    </div>
-                                                    <div className="text-center">
-                                                        <div className="text-xs font-bold text-stone-600 px-2 py-0.5 bg-stone-50 rounded border border-stone-100 font-mono">{emp.sick_leave_quota}</div>
-                                                    </div>
-                                                    <div className="text-center">
-                                                        <div className="text-xs font-bold text-stone-600 px-2 py-0.5 bg-stone-50 rounded border border-stone-100 font-mono">{emp.personal_leave_quota}</div>
-                                                    </div>
+                                                    <button 
+                                                        onClick={async () => {
+                                                            const newVal = prompt(`修改 ${emp.full_name} 的特休額度`, String(emp.annual_leave_quota));
+                                                            if (newVal !== null) {
+                                                                await updateLeaveQuotas(emp.id, { annual_leave_quota: Number(newVal) });
+                                                                fetchData();
+                                                            }
+                                                        }}
+                                                        className="text-center group"
+                                                    >
+                                                        <div className="text-xs font-bold text-orange-600 px-2 py-0.5 bg-orange-50 rounded border border-orange-100 group-hover:bg-orange-100 transition-colors cursor-pointer" title="點擊修改">{emp.annual_leave_quota}</div>
+                                                    </button>
+                                                    <button 
+                                                        onClick={async () => {
+                                                            const newVal = prompt(`修改 ${emp.full_name} 的病假額度`, String(emp.sick_leave_quota));
+                                                            if (newVal !== null) {
+                                                                await updateLeaveQuotas(emp.id, { sick_leave_quota: Number(newVal) });
+                                                                fetchData();
+                                                            }
+                                                        }}
+                                                        className="text-center group"
+                                                    >
+                                                        <div className="text-xs font-bold text-stone-600 px-2 py-0.5 bg-stone-50 rounded border border-stone-100 font-mono group-hover:bg-stone-100 transition-colors cursor-pointer" title="點擊修改">{emp.sick_leave_quota}</div>
+                                                    </button>
+                                                    <button 
+                                                        onClick={async () => {
+                                                            const newVal = prompt(`修改 ${emp.full_name} 的事假額度`, String(emp.personal_leave_quota));
+                                                            if (newVal !== null) {
+                                                                await updateLeaveQuotas(emp.id, { personal_leave_quota: Number(newVal) });
+                                                                fetchData();
+                                                            }
+                                                        }}
+                                                        className="text-center group"
+                                                    >
+                                                        <div className="text-xs font-bold text-stone-600 px-2 py-0.5 bg-stone-50 rounded border border-stone-100 font-mono group-hover:bg-stone-100 transition-colors cursor-pointer" title="點擊修改">{emp.personal_leave_quota}</div>
+                                                    </button>
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4">
