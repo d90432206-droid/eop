@@ -345,8 +345,13 @@ const AdminSettings: React.FC = () => {
                                         </select>
                                     </div>
 
-                                    <div className="pt-4 flex gap-3">
-                                        <button onClick={() => setEditingLeave(null)} className="flex-1 py-2 rounded-xl bg-stone-100 font-bold text-stone-600">取消</button>
+                                    <div className="pt-6 flex gap-4">
+                                        <button 
+                                            onClick={() => setEditingLeave(null)} 
+                                            className="flex-1 py-3 rounded-xl bg-stone-100 font-bold text-stone-600 hover:bg-stone-200 transition-colors"
+                                        >
+                                            取消
+                                        </button>
                                         <button
                                             onClick={async () => {
                                                 if (!confirm("確定要修改此假單嗎？這將會留下記錄。")) return;
@@ -360,16 +365,16 @@ const AdminSettings: React.FC = () => {
                                                             leave_type: editForm.leaveType,
                                                             is_overtime: editForm.isOvertime
                                                         },
-                                                        'Admin' // In real app, get current user name
+                                                        'Admin'
                                                     );
-                                                    alert("已更新");
+                                                    alert("✅ 已更新假單內容");
                                                     setEditingLeave(null);
                                                     fetchData();
                                                 } catch (e: any) {
-                                                    alert(e.message);
+                                                    alert(`更新失敗: ${e.message}`);
                                                 }
                                             }}
-                                            className="flex-1 py-2 rounded-xl bg-accent text-white font-bold"
+                                            className="flex-1 py-3 rounded-xl bg-[#ea580c] text-white font-bold hover:bg-[#c2410c] shadow-lg shadow-orange-200 transition-all active:scale-95"
                                         >
                                             儲存變更
                                         </button>
