@@ -129,8 +129,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       `}>
         <div className="flex p-6 border-b border-stone-100">
           <h1 className="text-xl font-bold tracking-tight text-stone-800 flex items-center gap-3">
-            <img src="/logo.png" alt="Logo" className="w-12 h-auto object-contain" />
-            <span className="text-stone-700 text-base">制宜電測差勤系統</span>
+            <img src="/logo.png" alt="Logo" className="w-14 h-auto object-contain" />
+            <span className="text-stone-700 text-lg font-black tracking-tighter">制宜電測差勤系統</span>
           </h1>
         </div>
 
@@ -209,12 +209,12 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 <p className="text-xs text-stone-400 flex items-center animate-pulse">載入資料中...</p>
               ) : currentUser ? (
                 <>
-                  <p className="text-sm font-bold text-stone-700 truncate">{currentUser.full_name}</p>
+                  <p className="text-base font-black text-stone-800 truncate">{currentUser.full_name}</p>
                   <div className="flex items-center gap-1">
                     {currentUser.role === 'admin' ?
-                      <ShieldCheck size={12} className="text-amber-500" /> : null
+                      <ShieldCheck size={14} className="text-amber-500" /> : null
                     }
-                    <p className="text-[10px] text-stone-500 truncate uppercase font-bold tracking-wider">
+                    <p className="text-xs text-stone-500 truncate uppercase font-bold tracking-wider">
                       {currentUser.job_title || (currentUser.role === 'admin' ? '系統管理員' : '一般員工')}
                     </p>
                   </div>

@@ -769,7 +769,7 @@ const ExpenseClaims: React.FC = () => {
                     </div>
 
                     <div className="mt-8 text-xs text-gray-500 text-center">
-                        * 本單據由 EnterpriseOps 系統自動生成，請檢附相關發票或收據憑證。
+                        * 本單據由 制宜電測差勤系統 自動生成，請檢附相關發票或收據憑證。
                     </div>
                 </div>
             </div>

@@ -53,11 +53,11 @@ const Login: React.FC = () => {
       <div className="max-w-md w-full bg-white rounded-2xl shadow-xl overflow-hidden border border-[#e7e5e4]">
         {/* Header */}
         <div className="bg-[#fff7ed] p-8 text-center relative overflow-hidden border-b border-orange-100">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-[#ea580c] rounded-2xl mb-4 shadow-lg shadow-orange-200 transform rotate-3">
-            <Building2 size={32} className="text-white" />
+          <div className="inline-flex items-center justify-center mb-4 transform hover:scale-105 transition-transform duration-300">
+            <img src="/logo.png" alt="Company Logo" className="w-24 h-auto drop-shadow-md" />
           </div>
-          <h1 className="text-2xl font-bold text-[#44403c] tracking-wide">EnterpriseOps</h1>
-          <p className="text-[#78716c] text-sm mt-2">企業內部管理系統</p>
+          <h1 className="text-2xl font-black text-[#44403c] tracking-tight">CHU YI 人事管理系統</h1>
+          <p className="text-[#a8a29e] text-sm mt-1 font-medium italic">Integrated Enterprise Management System</p>
         </div>
 
         {/* Form */}
@@ -128,7 +128,7 @@ const Login: React.FC = () => {
           </form>
 
           <div className="mt-6 text-center text-xs text-[#a8a29e] bg-[#f5f5f4] p-3 rounded-xl border border-[#e7e5e4]">
-            首次使用或忘記密碼，請聯繫管理部資訊組。
+            首次使用或忘記密碼，請聯繫管理部。
           </div>
         </div>
       </div>
