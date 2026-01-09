@@ -199,21 +199,25 @@ const VehicleMgmt: React.FC = () => {
 
                             return (
                                 <div key={car.id} className={`relative overflow-hidden border rounded-2xl shadow-sm transition-all duration-300 group flex flex-col ${selectedVehicle === car.id ? 'ring-2 ring-accent border-transparent' : 'bg-white hover:border-accent hover:shadow-md'}`}>
-                                    <div className={`h-2 w-full ${borrower ? 'bg-amber-500' : 'bg-emerald-500'}`}></div>
+                                    {/* 車輛大圖區 */}
+                                    <div className="w-full h-44 overflow-hidden relative bg-stone-100 group">
+                                        {car.image_url ? (
+                                            <img src={car.image_url} alt={car.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                                        ) : (
+                                            <div className="w-full h-full flex items-center justify-center text-stone-300">
+                                                <Car size={48} strokeWidth={1.5} />
+                                            </div>
+                                        )}
+                                        <div className="absolute top-3 left-3 bg-black/50 backdrop-blur-md text-white px-3 py-1 rounded-lg text-xs font-mono font-bold tracking-widest shadow-lg">
+                                            {car.plate_number}
+                                        </div>
+                                    </div>
+
                                     <div className="p-6 flex-1">
                                         <div className="flex justify-between items-start mb-4">
-                                            <div className="flex items-center gap-4">
-                                                <div className="w-24 h-16 rounded-xl border border-stone-100 overflow-hidden bg-stone-50 flex items-center justify-center shrink-0 shadow-sm">
-                                                    {car.image_url ? (
-                                                        <img src={car.image_url} alt={car.name} className="w-full h-full object-cover" />
-                                                    ) : (
-                                                        <Car size={24} className="text-stone-300" strokeWidth={1.5} />
-                                                    )}
-                                                </div>
-                                                <div>
-                                                    <h3 className="font-bold text-lg text-stone-800 tracking-tight leading-tight">{car.name}</h3>
-                                                    <p className="text-xs font-mono font-bold text-stone-400 tracking-widest mt-0.5">{car.plate_number}</p>
-                                                </div>
+                                            <div>
+                                                <h3 className="font-black text-xl text-stone-800 tracking-tight leading-none">{car.name}</h3>
+                                                <p className="text-xs text-stone-400 mt-2 font-medium">CHUYI 公務車輛</p>
                                             </div>
                                         </div>
 
